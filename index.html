@@ -82,7 +82,7 @@
     font-size:1.05rem;font-family:var(--body);background:#fff;color:var(--ink);
   }
   input:focus,select:focus{outline:none;border-color:var(--taupe);}
-  button{font-family:var(--body);cursor:pointer;border:none;}
+  button{font-family:var(--body);cursor:pointer;border:none;color:var(--ink);-webkit-appearance:none;appearance:none;}
   .btn-primary{
     background:var(--taupe);color:var(--cream);padding:14px 18px;border-radius:3px;
     font-family:var(--display);text-transform:uppercase;letter-spacing:2px;
@@ -121,8 +121,8 @@
   }
   .drink-btn:active{transform:scale(0.97);background:var(--peach-light);border-color:var(--taupe);}
   .drink-btn .emoji{font-size:1.7rem;}
-  .drink-btn .name{font-weight:600;font-size:1.05rem;line-height:1.2;color:var(--taupe-dark);}
-  .drink-btn .vol{font-size:.9rem;color:var(--muted);font-style:italic;}
+  .drink-btn .name{font-weight:600;font-size:1.05rem;line-height:1.2;color:var(--taupe-dark);-webkit-text-fill-color:var(--taupe-dark);}
+  .drink-btn .vol{font-size:.9rem;color:var(--muted);-webkit-text-fill-color:var(--muted);font-style:italic;}
   .empty-state{text-align:center;color:var(--muted);font-style:italic;padding:30px 10px;font-size:1rem;}
   .cooldown-banner{
     background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);
