@@ -8,7 +8,8 @@ rules_version = '2';
 //   weddingDrinkSettings/config    - one doc: event title + display options
 //   weddingDrinkMenu/{itemId}      - curated bar menu (name, volumeMl, category, active)
 //   weddingDrinkGuests/{guestId}   - one doc per guest, keyed by a slug of their name,
-//                                    holding running totals (totalMl, drinkCount)
+//                                    holding running totals (totalMl, drinkCount) and
+//                                    an "archived" flag set by admin remove/purge
 //   weddingDrinkLog/{logId}        - one doc per drink logged, auto-id
 //
 // What this allows, by design (no backend = no real auth -- guests just type
@@ -17,9 +18,12 @@ rules_version = '2';
 //   - Editing the MENU or SETTINGS (the admin actions) requires the wedding code.
 //   - Logging a drink, creating your own guest profile, and undoing your own drink
 //     do NOT require the code -- any guest with the link can do these freely.
-//   - Hard deletes are blocked entirely. "Undo" a drink by marking its log entry
-//     voided (an update, not a delete) and reversing the guest's totals in the
-//     same batch, rather than actually deleting anything.
+//   - Archiving a guest (the admin "Remove"/"Purge all" action) DOES require the
+//     code -- everything else about a guest doc can be self-updated, but setting
+//     archived == true cannot.
+//   - Hard deletes are blocked entirely. "Undo" a drink and admin "Remove"/"Purge"
+//     both work by marking things (voided / archived) rather than deleting them --
+//     removed guests reappear automatically (unarchived) if they log a new drink.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -46,7 +50,9 @@ service cloud.firestore {
                    && request.resource.data.totalMl is number
                    && request.resource.data.totalMl >= 0
                    && request.resource.data.drinkCount is number
-                   && request.resource.data.drinkCount >= 0;
+                   && request.resource.data.drinkCount >= 0
+                   && (request.resource.data.get('archived', false) != true
+                       || request.resource.data.code == "cheers2026");
       allow delete: if false;
     }
 

@@ -90,6 +90,11 @@
     font-weight:600;font-size:.88rem;
   }
   .btn-ghost{background:transparent;color:var(--muted);font-size:.82rem;text-decoration:underline;padding:6px;}
+  .btn-danger{
+    background:#fdecea;color:var(--danger);border:1.5px solid #f3c6c1;padding:12px 16px;border-radius:12px;
+    font-weight:700;font-size:.9rem;width:100%;
+  }
+  .btn-danger:active{background:#f9d9d6;}
   /* Tabs */
   nav.bottom-nav{
     position:fixed;bottom:0;left:0;right:0;background:var(--white);
@@ -163,6 +168,11 @@
   .menu-item-row.inactive{opacity:.5;}
   .mi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .mi-top .nm{font-weight:700;}
+  .guest-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #f0e4de;border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .guest-row .gr-info{display:flex;flex-direction:column;min-width:0;}
+  .guest-row .gr-name{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .guest-row .gr-stats{font-size:.74rem;color:var(--muted);}
+  .guest-row .btn-ghost{color:var(--danger);text-decoration:none;font-weight:600;white-space:nowrap;}
   .toggle{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);}
   .field-grid{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:8px;}
   .switch{position:relative;display:inline-block;width:38px;height:22px;flex:none;}
@@ -303,6 +313,12 @@
             <div class="section-title">📋 Manage Menu</div>
             <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">✨ Load starter menu (12 drinks)</button>
             <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">🧑‍🤝‍🧑 Manage Guests</div>
+            <button class="btn-danger" id="purgeAllBtn" style="margin-bottom:14px;">🧨 Purge ALL guests &amp; drinks</button>
+            <div id="adminGuestList"><div class="empty-state">No guests yet.</div></div>
           </div>
         </div>
       </section>
@@ -565,6 +581,7 @@
       nameLower: guestName.toLowerCase(),
       totalMl: firebase.firestore.FieldValue.increment(item.volumeMl),
       drinkCount: firebase.firestore.FieldValue.increment(1),
+      archived: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true});
 
@@ -618,6 +635,7 @@
       myGuestDoc = allGuests.find(function(g){ return g.id === guestId; }) || null;
       renderMyStats();
       renderLeaderboard();
+      renderAdminGuestList();
     }, function(err){ console.error(err); markWriteError(); });
   }
 
@@ -707,7 +725,7 @@
   // ==========================================================
   function renderLeaderboard(){
     var box = $("leaderboardList");
-    var withDrinks = allGuests.filter(function(g){ return (g.drinkCount||0) > 0; });
+    var withDrinks = allGuests.filter(function(g){ return (g.drinkCount||0) > 0 && g.archived !== true; });
     if(!withDrinks.length){
       box.innerHTML = '<div class="empty-state">No one\'s logged a drink yet…</div>';
       return;
@@ -824,6 +842,68 @@
           active: cb.checked,
           code: WEDDING_CODE
         }, {merge:true}).catch(function(e){ console.error(e); showToast("Couldn't update — check your connection."); });
+      });
+    });
+  }
+
+  // ---- Purge / remove guests ----
+  function archiveGuest(id){
+    return db.collection("weddingDrinkLog").where("guestId","==",id).get().then(function(snap){
+      var batch = db.batch();
+      snap.forEach(function(doc){
+        if(doc.data().voided !== true){ batch.update(doc.ref, { voided: true }); }
+      });
+      batch.set(db.collection("weddingDrinkGuests").doc(id), {
+        totalMl: 0,
+        drinkCount: 0,
+        archived: true,
+        code: WEDDING_CODE,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+      return batch.commit();
+    });
+  }
+
+  function removeGuest(id, name){
+    if(!firebaseReady) return;
+    if(!confirm(name + " will drop off the leaderboard and their totals reset to zero (their past drinks stay on record, just hidden). They reappear automatically if they log another drink. Continue?")) return;
+    archiveGuest(id).then(function(){
+      showToast(name + " removed.");
+    }).catch(function(e){ console.error(e); showToast("Couldn't remove — check your connection."); });
+  }
+
+  $("purgeAllBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    var targets = allGuests.filter(function(g){ return g.archived !== true; });
+    if(!targets.length){ showToast("Nothing to purge — the leaderboard's already empty."); return; }
+    var typed = prompt("This wipes ALL " + targets.length + " guest(s) — every drink and total, gone from the leaderboard. Type PURGE to confirm.");
+    if(typed !== "PURGE"){
+      if(typed !== null) showToast("Purge cancelled — text didn't match.");
+      return;
+    }
+    Promise.all(targets.map(function(g){ return archiveGuest(g.id); })).then(function(){
+      showToast("Purged " + targets.length + " guest(s).");
+    }).catch(function(e){ console.error(e); showToast("Purge partially failed — check your connection and try again."); });
+  });
+
+  function renderAdminGuestList(){
+    var box = $("adminGuestList");
+    if(!box) return;
+    var visible = allGuests.filter(function(g){ return g.archived !== true; });
+    if(!visible.length){
+      box.innerHTML = '<div class="empty-state">No guests yet.</div>';
+      return;
+    }
+    box.innerHTML = visible.map(function(g){
+      return '<div class="guest-row">'+
+        '<div class="gr-info"><span class="gr-name">'+escapeHtml(g.name)+'</span>'+
+        '<span class="gr-stats">'+fmtNum(mlToOz(g.totalMl||0))+' oz · '+(g.drinkCount||0)+' drinks</span></div>'+
+        '<button class="btn-ghost" data-remove-guest="'+g.id+'" data-name="'+escapeHtml(g.name)+'">Remove</button>'+
+        '</div>';
+    }).join("");
+    box.querySelectorAll("[data-remove-guest]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        removeGuest(btn.dataset.removeGuest, btn.dataset.name);
       });
     });
   }

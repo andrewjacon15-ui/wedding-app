@@ -17,8 +17,12 @@ website guests open on their phone.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
 - **Leaderboard** — everyone's total liquid volume, ranked live, with medals
   for the top 3.
-- **Admin tab** — passcode-gated menu and event-title management, right from
-  a phone. No app install or deploy step needed to curate the bar.
+- **Admin tab** — passcode-gated menu, event-title, and guest management,
+  right from a phone. No app install or deploy step needed to curate the bar.
+- **Purge / remove guests** — wipe the whole leaderboard before the big day,
+  or remove one guest at a time. Soft-delete under the hood (see below), so a
+  removed guest's history isn't destroyed — they just drop off the board
+  until they log another drink, at which point they reappear starting fresh.
 - **Mobile-first** — big tap targets, bottom tab nav, works great added to a
   phone's home screen.
 
@@ -43,6 +47,9 @@ app can actually read/write data:
 2. Go to the **Rules** tab and paste in the contents of
    [`firestore.rules`](firestore.rules) from this repo, then **Publish**.
    Without this step every read/write gets a `permission-denied` error.
+   Re-paste and re-publish any time `firestore.rules` changes in this repo —
+   the file in the console doesn't update itself. (It changed most recently
+   to gate the admin "Remove"/"Purge" actions behind the passcode.)
 
 To change the admin passcode from the `cheers2026` default: edit it in both
 `firestore.rules` (two spots) and `firebase-config.js` (`window.WEDDING_CODE`)
