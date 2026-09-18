@@ -11,6 +11,9 @@ rules_version = '2';
 //                                    holding running totals (totalMl, drinkCount) and
 //                                    an "archived" flag set by admin remove/purge
 //   weddingDrinkLog/{logId}        - one doc per drink logged, auto-id
+//   weddingDrinkPhotos/{photoId}   - guest-uploaded photo: small thumbnail (data URL),
+//                                    uploader, and a "hidden" flag admin can set
+//   weddingDrinkPhotoFull/{photoId}- the larger copy of the same photo, loaded on tap
 //
 // What this allows, by design (no backend = no real auth -- guests just type
 // their name, which keeps it frictionless for a party):
@@ -21,6 +24,9 @@ rules_version = '2';
 //   - Archiving a guest (the admin "Remove"/"Purge all" action) DOES require the
 //     code -- everything else about a guest doc can be self-updated, but setting
 //     archived == true cannot.
+//   - Anyone with the link can upload photos; hiding one from the gallery (admin
+//     only) requires the code. Photos are size-capped so a single upload can't
+//     bloat the database.
 //   - Hard deletes are blocked entirely. "Undo" a drink and admin "Remove"/"Purge"
 //     both work by marking things (voided / archived) rather than deleting them --
 //     removed guests reappear automatically (unarchived) if they log a new drink.
@@ -54,6 +60,26 @@ service cloud.firestore {
                    && (request.resource.data.get('archived', false) != true
                        || request.resource.data.code == "cheers2026");
       allow delete: if false;
+    }
+
+    match /weddingDrinkPhotos/{photoId} {
+      allow read: if true;
+      allow create: if request.resource.data.guestId is string
+                   && request.resource.data.guestId.size() > 0
+                   && request.resource.data.thumb is string
+                   && request.resource.data.thumb.size() < 120000
+                   && request.resource.data.hidden == false;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(["hidden", "code"])
+                   && request.resource.data.code == "cheers2026";
+      allow delete: if false;
+    }
+
+    match /weddingDrinkPhotoFull/{photoId} {
+      allow read: if true;
+      allow create: if request.resource.data.full is string
+                   && request.resource.data.full.size() < 900000;
+      allow update, delete: if false;
     }
 
     match /weddingDrinkLog/{logId} {

@@ -16,6 +16,10 @@ website guests open on their phone.
   immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
 - **Leaderboard** — everyone's total liquid volume, ranked live.
+- **Guest photos** — a Photos tab where anyone can snap or pick photos (up to
+  10 at a time). Photos are shrunk on the phone and stored in Firestore, so
+  no paid Storage plan is needed. Tap a photo to view it larger; admins can
+  hide any photo from the Admin tab.
 - **Matches the wedding website** — cream and taupe palette, Amarante
   headings, and Crimson Text body copy, to look like part of the same site.
 - **Admin tab** — passcode-gated menu, event-title, and guest management,
@@ -50,7 +54,7 @@ app can actually read/write data:
    Without this step every read/write gets a `permission-denied` error.
    Re-paste and re-publish any time `firestore.rules` changes in this repo —
    the file in the console doesn't update itself. (It changed most recently
-   to gate the admin "Remove"/"Purge" actions behind the passcode.)
+   to add the Photos collections.)
 
 To change the admin passcode from the `cheers2026` default: edit it in both
 `firestore.rules` (two spots) and `firebase-config.js` (`window.WEDDING_CODE`)

@@ -106,7 +106,7 @@
     padding:10px 4px calc(10px + env(safe-area-inset-bottom));z-index:50;
   }
   nav.bottom-nav button{
-    background:none;flex:1;color:var(--muted);font-size:1.05rem;font-style:italic;padding:8px 2px;letter-spacing:.5px;
+    background:none;flex:1;color:var(--muted);font-size:.95rem;font-style:italic;padding:8px 0;letter-spacing:0;
   }
   nav.bottom-nav button.active{color:var(--taupe-dark);text-decoration:underline;text-underline-offset:7px;text-decoration-thickness:1px;}
   .tab-panel{display:none;}
@@ -195,6 +195,29 @@
   .unit-toggle{display:flex;gap:6px;justify-content:center;margin:2px 0 16px;}
   .unit-toggle button{padding:6px 16px;border-radius:999px;font-size:.8rem;font-family:var(--display);text-transform:uppercase;letter-spacing:1.5px;background:transparent;color:var(--taupe);border:1px solid var(--peach);}
   .unit-toggle button.active{background:var(--taupe);color:var(--cream);border-color:var(--taupe);}
+  /* Photos */
+  .photo-upload-label{
+    display:block;text-align:center;background:var(--taupe);color:var(--cream);padding:14px 18px;border-radius:3px;
+    font-family:var(--display);text-transform:uppercase;letter-spacing:2px;font-size:.85rem;cursor:pointer;
+  }
+  .photo-upload-label.busy{opacity:.55;pointer-events:none;}
+  .photo-upload-label input{display:none;}
+  .photo-hint{text-align:center;color:var(--muted);font-style:italic;font-size:.95rem;margin:10px 0 16px;}
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .photo-tile{position:relative;aspect-ratio:1/1;background:var(--peach-light);border:1px solid var(--peach);border-radius:3px;overflow:hidden;padding:0;}
+  .photo-tile img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-hide{
+    position:absolute;top:4px;right:4px;background:rgba(95,76,62,.85);color:var(--cream);
+    font-size:.72rem;padding:3px 8px;border-radius:999px;font-style:italic;
+  }
+  #lightbox{
+    position:fixed;inset:0;background:rgba(40,28,20,.94);z-index:300;display:none;
+    flex-direction:column;align-items:center;justify-content:center;padding:20px;
+  }
+  #lightbox.show{display:flex;}
+  #lightbox img{max-width:100%;max-height:78vh;object-fit:contain;border-radius:3px;}
+  #lightbox .lb-cap{color:var(--peach);font-style:italic;margin-top:14px;font-size:1rem;}
+  #lightbox .lb-close{position:absolute;top:14px;right:16px;background:none;color:var(--cream);font-size:2rem;line-height:1;padding:6px 12px;}
 </style>
 </head>
 <body>
@@ -259,6 +282,18 @@
         <div class="card">
           <div class="section-title">Leaderboard</div>
           <div id="leaderboardList"><div class="empty-state">No one's logged a drink yet…</div></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-photos">
+        <div class="card">
+          <div class="section-title">Photos</div>
+          <label class="photo-upload-label" id="photoUploadLabel">
+            Add photos
+            <input type="file" id="photoInput" accept="image/*" multiple>
+          </label>
+          <div class="photo-hint">Snap one or pick from your library. Up to 10 at a time.</div>
+          <div class="photo-grid" id="photoGrid"><div class="empty-state" style="grid-column:1/-1;">No photos yet. Be the first!</div></div>
         </div>
       </section>
 
@@ -329,10 +364,17 @@
     <button data-tab="drinks" class="active">Drinks</button>
     <button data-tab="me">My Stats</button>
     <button data-tab="leaderboard">Leaderboard</button>
+    <button data-tab="photos">Photos</button>
     <button data-tab="admin">Admin</button>
   </nav>
 
   <div class="footer-note">Please drink responsibly and look out for each other.</div>
+</div>
+
+<div id="lightbox">
+  <button class="lb-close" id="lightboxClose" aria-label="Close">&times;</button>
+  <img id="lightboxImg" alt="">
+  <div class="lb-cap" id="lightboxCap"></div>
 </div>
 
 <div id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
@@ -763,12 +805,144 @@
   }
 
   // ==========================================================
+  // Photos
+  // ==========================================================
+  // No Storage bucket (needs a paid plan): photos are shrunk in the browser and
+  // saved as small JPEG data URLs in Firestore. A ~400px thumbnail lives in
+  // weddingDrinkPhotos (cheap to list); the ~1280px copy lives in
+  // weddingDrinkPhotoFull and is only fetched when someone taps a photo.
+  var MAX_PHOTOS_PER_PICK = 10;
+  var photos = [];
+  var photoUploading = false;
+
+  function loadImage(file){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function(){ URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("unreadable image")); };
+      img.src = url;
+    });
+  }
+  function scaleToJpeg(img, maxDim, maxLen){
+    var scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    var c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    var q = 0.75;
+    var out = c.toDataURL("image/jpeg", q);
+    while(out.length > maxLen && q > 0.3){ q -= 0.1; out = c.toDataURL("image/jpeg", q); }
+    return out;
+  }
+  function isImageDataUrl(s){ return typeof s === "string" && s.indexOf("data:image/") === 0; }
+
+  $("photoInput").addEventListener("change", function(e){
+    var files = Array.prototype.slice.call(e.target.files || []);
+    e.target.value = "";
+    if(!files.length) return;
+    if(!firebaseReady){ showToast("Can't upload: Firebase isn't set up."); return; }
+    if(!guestId){ $("nameGate").style.display = "flex"; return; }
+    if(photoUploading) return;
+    if(files.length > MAX_PHOTOS_PER_PICK){
+      showToast("Taking the first " + MAX_PHOTOS_PER_PICK + " photos.");
+      files = files.slice(0, MAX_PHOTOS_PER_PICK);
+    }
+    uploadPhotos(files);
+  });
+
+  function uploadPhotos(files){
+    photoUploading = true;
+    $("photoUploadLabel").classList.add("busy");
+    var done = 0, failed = 0;
+    files.reduce(function(chain, file, i){
+      return chain.then(function(){
+        showToast("Uploading " + (i+1) + " of " + files.length + "...");
+        return loadImage(file).then(function(img){
+          var thumb = scaleToJpeg(img, 400, 60000);
+          var full = scaleToJpeg(img, 1280, 650000);
+          var thumbRef = db.collection("weddingDrinkPhotos").doc();
+          var batch = db.batch();
+          batch.set(thumbRef, {
+            guestId: guestId, guestName: guestName, thumb: thumb, hidden: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          batch.set(db.collection("weddingDrinkPhotoFull").doc(thumbRef.id), { full: full });
+          return batch.commit();
+        }).then(function(){ done++; }).catch(function(err){ console.error(err); failed++; });
+      });
+    }, Promise.resolve()).then(function(){
+      photoUploading = false;
+      $("photoUploadLabel").classList.remove("busy");
+      if(failed && !done) showToast("Couldn't upload. Try again on a better connection.");
+      else if(failed) showToast(done + " uploaded, " + failed + " failed.");
+      else showToast(done === 1 ? "Photo added!" : done + " photos added!");
+    });
+  }
+
+  if(firebaseReady){
+    db.collection("weddingDrinkPhotos").orderBy("createdAt","desc").limit(120).onSnapshot(function(snap){
+      photos = [];
+      snap.forEach(function(doc){ photos.push(Object.assign({id:doc.id}, doc.data())); });
+      renderPhotoGallery();
+    }, function(err){ console.error(err); });
+  }
+
+  function renderPhotoGallery(){
+    var grid = $("photoGrid");
+    var visible = photos.filter(function(p){ return p.hidden !== true && isImageDataUrl(p.thumb); });
+    if(!visible.length){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">No photos yet. Be the first!</div>';
+      return;
+    }
+    grid.innerHTML = visible.map(function(p){
+      return '<div class="photo-tile" data-photo="'+p.id+'">'+
+        '<img src="'+p.thumb+'" alt="Photo shared by '+escapeHtml(p.guestName||"a guest")+'" loading="lazy">'+
+        (adminUnlocked ? '<button class="photo-hide" data-hide="'+p.id+'">Hide</button>' : '')+
+        '</div>';
+    }).join("");
+    grid.querySelectorAll(".photo-tile").forEach(function(tile){
+      tile.addEventListener("click", function(){ openLightbox(tile.dataset.photo); });
+    });
+    grid.querySelectorAll("[data-hide]").forEach(function(btn){
+      btn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        hidePhoto(btn.dataset.hide);
+      });
+    });
+  }
+
+  function hidePhoto(id){
+    if(!firebaseReady) return;
+    if(!confirm("Hide this photo from the gallery for everyone?")) return;
+    db.collection("weddingDrinkPhotos").doc(id).update({ hidden: true, code: WEDDING_CODE })
+      .then(function(){ showToast("Photo hidden."); })
+      .catch(function(e){ console.error(e); showToast("Couldn't hide that photo."); });
+  }
+
+  function openLightbox(id){
+    var p = photos.find(function(x){ return x.id === id; });
+    if(!p) return;
+    $("lightboxImg").src = p.thumb;
+    $("lightboxCap").textContent = p.guestName ? "Shared by " + p.guestName : "";
+    $("lightbox").classList.add("show");
+    db.collection("weddingDrinkPhotoFull").doc(id).get().then(function(doc){
+      if(doc.exists && isImageDataUrl(doc.data().full) && $("lightbox").classList.contains("show")){
+        $("lightboxImg").src = doc.data().full;
+      }
+    }).catch(function(e){ console.error(e); });
+  }
+  function closeLightbox(){ $("lightbox").classList.remove("show"); $("lightboxImg").src = ""; }
+  $("lightbox").addEventListener("click", closeLightbox);
+
+  // ==========================================================
   // Admin
   // ==========================================================
   var adminUnlocked = localStorage.getItem("wdt_admin_unlocked") === "1";
   function refreshAdminGate(){
     $("adminLockCard").style.display = adminUnlocked ? "none" : "block";
     $("adminPanels").style.display = adminUnlocked ? "block" : "none";
+    renderPhotoGallery();
   }
   refreshAdminGate();
 
