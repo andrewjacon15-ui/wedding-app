@@ -547,22 +547,101 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
-  // Swear-word masking for drink notes. The word stays readable: the first vowel
-  // after the first letter becomes "*" (fuck -> f*ck, shit -> sh*t, ass -> a*s).
-  // Applied both when a note is saved and when it is shown. Long stems match
-  // inside words (bullshit -> bullsh*t); short ones only as whole words so
-  // "glass" and "cocktail" are left alone.
-  var PROFANE_STEMS = ["fuck","shit","bitch","cunt","pussy","whore","slut","bastard","asshole","twat","wank","prick","piss","damn","nigger","nigga","faggot"];
-  var PROFANE_WORDS = ["ass","asses","dick","dicks","dickhead","cock","cocks"];
-  var PROFANE_RE = new RegExp("(?:" + PROFANE_STEMS.join("|") + ")|\\b(?:" + PROFANE_WORDS.join("|") + ")\\b", "gi");
-  function maskWord(w){
-    var v = w.slice(1).search(/[aeiou]/i);
-    var i = v === -1 ? 1 : v + 1;
-    return w.slice(0, i) + "*" + w.slice(i + 1);
+  // ---- Swear-word masking + note safety filter ----
+  // Swear words stay readable: the first vowel after the first letter becomes "*"
+  // (fuck -> f*ck, shit -> sh*t, ass -> a*s). Each space-separated word is
+  // normalised before matching so simple tricks don't work: number/symbol swaps
+  // (sh1t, a$$), stretched letters (fuuuck), punctuation inside a word (f.u.c.k),
+  // and phonetic spellings (fuq, asz). Runs when a note is saved AND when it is
+  // shown, so anything already in the database is covered too.
+  // Rules match inside a word unless they are anchored with ^ and $, which keeps
+  // words like glass, class, cocktail, assessment and Dickens untouched.
+  var LEET_MAP = {"0":"o","1":"i","3":"e","4":"a","5":"s","7":"t","@":"a","$":"s"};
+  var TAIL_GROUP_RULE = /(?:dumb|jack|bad|smart|fat|kick|lame|hard|half|wise|big)(a[sz]{2}(?:es)?)$/g;
+  var PROFANITY_RULES = [
+    /f[uv]+(?:ck+|k+|q+)/g,                         // fuck, fuk, fuq, fuuuck
+    /sh+[iy]+t+/g,                                   // shit, shyt, bullshit
+    /bi+a?t+ch+/g,                                   // bitch, biatch
+    /[ck]u+nt/g,                                     // cunt
+    /pu+ss+[yi]/g,                                   // pussy
+    /wh+o+r+e/g,                                     // whore
+    /slu+t/g,                                        // slut
+    /ba+st+a+rd/g,                                   // bastard
+    /as+h+(?:o+le|at)/g,                             // asshole, asshat
+    /ar+se+ho+le/g,                                  // arsehole
+    /tw+a+t/g,                                       // twat
+    /^wa+nk/g,                                       // wank
+    /^pri+ck/g,                                      // prick
+    /^pi+ss/g,                                       // piss, pissed
+    /da+m+n/g, /dam+n?it/g,                          // damn, goddamn, dammit
+    /^a[sz]{2,3}(?:es)?$/g,                          // ass, asz, asses (whole word only)
+    /^ar+se+s?$/g,                                   // arse
+    TAIL_GROUP_RULE,                                 // dumbass, jackass (masks only the ass part)
+    /^di+c*k+s?(?:head|heads|y)?$/g,                 // dick, dickhead (whole word only)
+    /^co+ck+s?(?:sucker|suckers|head)?$/g,           // cock (whole word only, so cocktail is safe)
+    /^cho+de+s?$/g,                                  // chode
+    /scro+t(?:um|e)s?/g,                             // scrotum
+    /di+ldo/g, /ji+zz+/g, /blo+w?jo+b/g, /ha+ndjo+b/g,
+    /^cu+m(?:s|ming|shot)?$/g,                       // cum (whole word only)
+    /^bo+ne+rs?$/g,                                  // boner
+    /(?:nut|ball)sa+ck/g,
+    /^(?:wtf|stfu|gtfo|lmfao|fml|wtaf)$/g,           // f-word acronyms
+    /^ni+gg+(?:er|a|ah|uh)s?$/g,                     // slurs
+    /^fa+g+h?(?:o+t|i+t|y|ie)?s?$/g,
+    /^reta+rd(?:ed|s)?$/g,
+    /^tra+nn+(?:y|ie)s?$/g,
+    /^ch+i+nk+s?$/g, /^ki+ke+s?$/g
+  ];
+
+  function maskToken(tok){
+    if(!/[a-z]/i.test(tok)) return tok;             // pure numbers/symbols (455, $$$) are never words
+    var norm = "", map = [];
+    for(var i = 0; i < tok.length; i++){
+      var ch = tok.charAt(i).toLowerCase();
+      if(/[a-z]/.test(ch)){ norm += ch; map.push(i); }
+      else if(LEET_MAP[ch]){ norm += LEET_MAP[ch]; map.push(i); }
+      else if(ch === "!" && i > 0 && i < tok.length - 1 && /[a-z]/i.test(tok.charAt(i - 1)) && /[a-z]/i.test(tok.charAt(i + 1))){ norm += "i"; map.push(i); }
+    }
+    if(norm.length < 2) return tok;
+    var hits = {}, any = false;
+    PROFANITY_RULES.forEach(function(re){
+      re.lastIndex = 0;
+      var m;
+      while((m = re.exec(norm))){
+        var start = m.index, end = m.index + m[0].length;
+        if(re === TAIL_GROUP_RULE) start = end - m[1].length;
+        var pos = start + 1;
+        for(var k = start + 1; k < end; k++){ if(/[aeiou]/.test(norm.charAt(k))){ pos = k; break; } }
+        // Already has a * inside it? Someone (or an earlier pass) masked it; leave it alone.
+        if(tok.slice(map[start], map[end - 1] + 1).indexOf("*") !== -1){ if(m[0].length === 0) re.lastIndex++; continue; }
+        hits[map[pos]] = true; any = true;
+        if(m[0].length === 0) re.lastIndex++;
+      }
+    });
+    if(!any) return tok;
+    var out = tok.split("");
+    Object.keys(hits).forEach(function(idx){ out[idx] = "*"; });
+    return out.join("");
+  }
+  // Letters spaced out one at a time ("c u n t", "s.h.i.t") are joined, checked, and masked in place.
+  function maskSpacedLetters(run){
+    var idx = [], letters = "";
+    for(var i = 0; i < run.length; i++){ if(/[a-z]/i.test(run.charAt(i))){ idx.push(i); letters += run.charAt(i); } }
+    var masked = maskToken(letters);
+    if(masked === letters) return run;
+    var out = run.split("");
+    for(var j = 0; j < masked.length; j++){ if(masked.charAt(j) === "*") out[idx[j]] = "*"; }
+    return out.join("");
   }
   function censorProfanity(text){
-    return String(text == null ? "" : text).replace(PROFANE_RE, maskWord);
+    var t = String(text == null ? "" : text).replace(/(?:^|\s)(?:[a-z][ ._-]){2,}[a-z](?=\s|$)/gi, maskSpacedLetters);
+    return t.replace(/\S+/g, maskToken);
   }
+
+  // Notes that tell someone to hurt themselves are dropped entirely, not just masked.
+  var BLOCKED_NOTE_RE = /\bkill\s+(?:your|ur|them|him|her|my|our)\s?(?:self|selves)\b|\bkill\s+yourselves\b|\bkys\b/i;
+  function isBlockedNote(text){ return BLOCKED_NOTE_RE.test(String(text == null ? "" : text)); }
+  function safeNote(text){ return isBlockedNote(text) ? "[removed by filter]" : censorProfanity(text); }
   function plural(n, word){ return n + " " + word + (n === 1 ? "" : "s"); }
   function fmtNum(n, decimals){
     return Number(n).toFixed(decimals==null?1:decimals).replace(/\.0$/,"");
@@ -803,7 +882,9 @@
       return;
     }
 
-    var note = censorProfanity(($("drinkNote").value || "").trim().slice(0, 140));
+    var rawNote = ($("drinkNote").value || "").trim().slice(0, 140);
+    var noteBlocked = isBlockedNote(rawNote);
+    var note = noteBlocked ? "" : censorProfanity(rawNote);
     var batch = db.batch();
     var logRef = db.collection("weddingDrinkLog").doc();
     var logData = {
@@ -840,8 +921,8 @@
       markWriteOk();
       optimisticLastDrinkAt = Date.now();
       updateCooldownUI();
-      if(note){ $("drinkNote").value = ""; updateNoteCount(); }
-      showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)", function(){
+      if(note || noteBlocked){ $("drinkNote").value = ""; updateNoteCount(); }
+      showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)" + (noteBlocked ? ". Your note wasn't posted." : ""), function(){
         undoLog(logRef.id, item.volumeMl, item.id);
       });
       maybeWaterNudge(countAfter, item);
@@ -967,7 +1048,7 @@
         '<div class="li"><span class="emoji">'+escapeHtml(l.emoji||'🥂')+'</span>'+
         '<span class="meta"><span class="n">'+escapeHtml(l.itemName)+'</span>'+
         '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span>'+
-        (l.message ? '<span class="note">&ldquo;'+escapeHtml(censorProfanity(l.message))+'&rdquo;</span>' : '')+
+        (l.message && !isBlockedNote(l.message) ? '<span class="note">&ldquo;'+escapeHtml(censorProfanity(l.message))+'&rdquo;</span>' : '')+
         '</span></div>'+
         (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'" data-item="'+escapeHtml(l.itemId||'')+'">Undo</button>')+
         '</div>';
@@ -1056,7 +1137,7 @@
   function renderNotesFeed(){
     var box = $("notesFeed");
     var notes = recentLogs.filter(function(l){
-      return l.message && l.voided !== true && l.messageHidden !== true;
+      return l.message && l.voided !== true && l.messageHidden !== true && !isBlockedNote(l.message);
     }).slice(0, 30);
     if(!notes.length){
       box.innerHTML = '<div class="empty-state">No notes yet. Add one with your next drink!</div>';
@@ -1445,7 +1526,7 @@
     exportBusy("Preparing messages", fetchAllLogs().then(function(logs){
       var rows = [["Time", "Guest", "Drink", "Message", "Status"]];
       logs.filter(function(l){ return l.message; }).forEach(function(l){
-        rows.push([fmtStamp(l.loggedAt), l.guestName, l.itemName, censorProfanity(l.message),
+        rows.push([fmtStamp(l.loggedAt), l.guestName, l.itemName, safeNote(l.message),
           l.voided === true ? "drink undone" : (l.messageHidden === true ? "hidden by admin" : "shown")]);
       });
       downloadCsv("messages", rows);
@@ -1459,7 +1540,7 @@
       var rows = [["Time", "Guest", "Guest ID", "Drink", "Category", "fl oz", "mL", "Message", "Undone", "Message hidden"]];
       logs.forEach(function(l){
         rows.push([fmtStamp(l.loggedAt), l.guestName, l.guestId, l.itemName, l.category || "",
-          fmtNum(mlToOz(l.volumeMl || 0), 1), Math.round(l.volumeMl || 0), l.message ? censorProfanity(l.message) : "",
+          fmtNum(mlToOz(l.volumeMl || 0), 1), Math.round(l.volumeMl || 0), l.message ? safeNote(l.message) : "",
           l.voided === true ? "yes" : "no", l.messageHidden === true ? "yes" : "no"]);
       });
       downloadCsv("complete-drink-log", rows);
