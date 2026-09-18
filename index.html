@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#FFFAF5">
-<title>Andrew & Lydia · Drink Tracker</title>
+<title>Andrew & Lydia · Wedding</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥂</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,7 +57,7 @@
     border:1px solid var(--peach);background:var(--white);color:var(--taupe);
     padding:6px 18px;border-radius:999px;font-size:.98rem;font-style:italic;cursor:pointer;
   }
-  .app-header .guest-chip::before{content:"Drinking as";font-style:normal;font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .app-header .guest-chip::before{content:"Hello";font-style:normal;font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
   .divider{width:56px;height:1px;background:var(--accent);margin:22px auto 0;opacity:.7;}
   main{max-width:520px;margin:0 auto;padding:22px 16px 8px;}
   .card{
@@ -241,8 +241,8 @@
 <div id="nameGate">
   <div class="box">
     <div class="eyebrow">November 7, 2026</div>
-    <h1>Who's drinking?</h1>
-    <p>Enter your name to start tracking your drinks tonight.</p>
+    <h1>Welcome</h1>
+    <p>Enter your name to join in: log drinks, share photos, and more.</p>
     <input type="text" id="gateNameInput" placeholder="Your first name" maxlength="30" autocomplete="off">
     <button class="btn-primary" id="gateSubmit">Let's go</button>
   </div>
@@ -252,7 +252,7 @@
   <header class="app-header">
     <h1 id="eventTitle">Andrew &amp; Lydia</h1>
     <div class="dateline">November 7, 2026<br>Clarkesville, Georgia</div>
-    <div class="sub" id="eventSubtitle">Tap a drink each time you grab one</div>
+    <div class="sub" id="eventSubtitle">Welcome to our wedding celebration</div>
     <div class="guest-chip" id="guestChip" title="Tap to change your name"><span id="guestChipName">—</span></div>
     <div class="divider"></div>
   </header>
@@ -265,6 +265,7 @@
       <section class="tab-panel active" id="tab-drinks">
         <div class="card">
           <div class="section-title">The Bar Menu</div>
+          <div class="photo-hint" style="margin-top:-6px;">Tap a drink each time you grab one. Please drink responsibly and look out for each other.</div>
           <div class="cooldown-banner" id="cooldownBanner">Next drink unlocks in <span id="cooldownTime">0:00</span></div>
           <div class="note-wrap">
             <input type="text" id="drinkNote" maxlength="140" placeholder="Add a note with your next drink (optional)" autocomplete="off">
@@ -337,7 +338,7 @@
             <label class="small">Event title</label>
             <input type="text" id="settingsTitle" placeholder="Andrew &amp; Lydia" style="margin-bottom:10px;">
             <label class="small">Subtitle</label>
-            <input type="text" id="settingsSubtitle" placeholder="Tap a drink each time you grab one">
+            <input type="text" id="settingsSubtitle" placeholder="Welcome to our wedding celebration">
             <button class="btn-primary" id="saveSettingsBtn">Save settings</button>
           </div>
 
@@ -391,7 +392,7 @@
     <button data-tab="photos">Photos</button>
   </nav>
 
-  <div class="footer-note">Please drink responsibly and look out for each other.<br><button class="admin-link" id="adminLink">Admin</button></div>
+  <div class="footer-note">Thank you for celebrating with us.<br><button class="admin-link" id="adminLink">Admin</button></div>
 </div>
 
 <div id="lightbox">
@@ -564,7 +565,7 @@
   // ==========================================================
   // Settings
   // ==========================================================
-  var currentSettings = { title:"Andrew & Lydia", subtitle:"Tap a drink each time you grab one" };
+  var currentSettings = { title:"Andrew & Lydia", subtitle:"Welcome to our wedding celebration" };
   if(firebaseReady){
     db.collection("weddingDrinkSettings").doc("config").onSnapshot(function(doc){
       if(doc.exists){

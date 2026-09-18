@@ -1,9 +1,10 @@
-# Andrew & Lydia — Wedding Drink Tracker
+# Andrew & Lydia — Wedding App
 
-A mobile-friendly web app for wedding guests to log the drinks they grab from
-your curated bar menu, see their own total liquid volume consumed, and check
-a live leaderboard against everyone else. No app install required — it's a
-website guests open on their phone.
+A mobile-friendly web app for our wedding guests. Right now it includes a
+drink tracker (log drinks from the curated bar menu, see your total, and check
+a live leaderboard), optional notes with each drink, and a shared photo
+gallery, with room to add more. No app install required: it's a website
+guests open on their phone.
 
 ## Features
 
@@ -46,7 +47,9 @@ for a party.
 ## One-time setup
 
 `firebase-config.js` is already wired to the `wedding-drink-tracker` Firebase
-project's web app config, and the admin passcode is `cheers2026` (change it —
+project's web app config (the project keeps that ID because Firebase project
+IDs can't be renamed, and the database collections keep their `weddingDrink*`
+names so existing data stays intact), and the admin passcode is `cheers2026` (change it —
 see below). Two things still need doing in the Firebase console before the
 app can actually read/write data:
 
@@ -95,7 +98,7 @@ repo — go to **Settings → Pages** on GitHub, set the source to the `main`
 branch (root), and your guests' link will be:
 
 ```
-https://<your-github-username>.github.io/wedding-drink-tracker/
+https://<your-github-username>.github.io/wedding-app/
 ```
 
 Put that link on a table card, your wedding website, or a QR code at the bar.

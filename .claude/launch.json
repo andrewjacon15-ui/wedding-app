@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "wedding-drink-tracker",
+      "name": "wedding-app",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8420"],
       "port": 8420
