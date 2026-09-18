@@ -24,6 +24,15 @@ guests open on their phone.
   10 at a time). Photos are shrunk on the phone and stored in Firestore, so
   no paid Storage plan is needed. Tap a photo to view it larger; admins can
   permanently delete any photo (Admin is the small link under the footer).
+- **Photo screening** — every photo, whether taken with the camera or picked
+  from the library, is checked on the guest's phone by an open-source model
+  ([NSFW.js](https://github.com/infinitered/nsfwjs), self-hosted in `vendor/nsfw/`)
+  before it is uploaded. Nudity and explicit images are blocked with a friendly
+  message, and if the check can't run the photo is not uploaded. It is a
+  best-effort filter, not a guarantee: it runs in the guest's browser (a
+  determined person could bypass it) and no model is perfect, so keep an eye on
+  the gallery and use Admin Delete for anything that slips through. The first
+  photo check downloads about 5 MB once per phone.
 - **Matches the wedding website** — cream and taupe palette, Amarante
   headings, and Crimson Text body copy, to look like part of the same site.
 - **Admin tab** — passcode-gated menu, event-title, and guest management,

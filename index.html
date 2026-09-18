@@ -317,7 +317,7 @@
             Add photos
             <input type="file" id="photoInput" accept="image/*" multiple>
           </label>
-          <div class="photo-hint">Snap one or pick from your library. Up to 10 at a time.</div>
+          <div class="photo-hint">Snap one or pick from your library. Up to 10 at a time. Photos are checked automatically, and anything inappropriate is blocked.</div>
           <div class="photo-grid" id="photoGrid"><div class="empty-state" style="grid-column:1/-1;">No photos yet. Be the first!</div></div>
         </div>
       </section>
@@ -523,6 +523,7 @@
     document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
     $("tab-" + name).classList.add("active");
     window.scrollTo(0, 0);
+    if(name === "photos") loadModerationModel().catch(function(){});
   }
   navButtons.forEach(function(btn){
     btn.addEventListener("click", function(){ showTab(btn.dataset.tab); });
@@ -929,14 +930,65 @@
     uploadPhotos(files);
   });
 
+  // ---- Photo screening ----
+  // Every photo, whether taken with the camera or picked from the library,
+  // is checked on the phone by an open-source model (NSFW.js) BEFORE anything
+  // is uploaded. Nothing is sent to a moderation server. This is a
+  // best-effort filter, not a guarantee: it runs in the guest's browser, so a
+  // determined person could bypass it, and admins can still delete any photo.
+  var NSFW_BASE = "vendor/nsfw/";
+  var NSFW_EXPLICIT_LIMIT = 0.4;  // Porn + Hentai
+  var NSFW_SEXY_LIMIT = 0.85;     // suggestive; high bar so formal wear isn't flagged
+  var nsfwModelPromise = null;
+
+  function loadModerationModel(){
+    if(nsfwModelPromise) return nsfwModelPromise;
+    nsfwModelPromise = new Promise(function(resolve, reject){
+      var s = document.createElement("script");
+      s.src = NSFW_BASE + "nsfwjs.min.js";
+      s.onload = function(){ window.nsfwjs.load(NSFW_BASE + "model/").then(resolve, reject); };
+      s.onerror = function(){ reject(new Error("moderation script failed to load")); };
+      document.head.appendChild(s);
+    }).catch(function(e){ nsfwModelPromise = null; throw e; });
+    return nsfwModelPromise;
+  }
+
+  // Resolves { ok:true } or { ok:false, scores }. Rejects if the check itself can't run.
+  function screenImage(img){
+    return loadModerationModel().then(function(model){
+      var scale = Math.min(1, 448 / Math.max(img.naturalWidth, img.naturalHeight));
+      var c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      return model.classify(c);
+    }).then(function(preds){
+      var p = {};
+      preds.forEach(function(x){ p[x.className] = x.probability; });
+      var explicit = (p.Porn || 0) + (p.Hentai || 0);
+      var blocked = explicit >= NSFW_EXPLICIT_LIMIT || (p.Sexy || 0) >= NSFW_SEXY_LIMIT;
+      return { ok: !blocked, scores: p };
+    });
+  }
+
   function uploadPhotos(files){
     photoUploading = true;
     $("photoUploadLabel").classList.add("busy");
-    var done = 0, failed = 0;
+    var done = 0, failed = 0, rejected = 0, unchecked = 0;
     files.reduce(function(chain, file, i){
       return chain.then(function(){
-        showToast("Uploading " + (i+1) + " of " + files.length + "...");
+        showToast("Checking photo " + (i+1) + " of " + files.length + "...");
         return loadImage(file).then(function(img){
+          return screenImage(img).then(function(verdict){
+            if(!verdict.ok){ rejected++; return null; }
+            showToast("Uploading " + (i+1) + " of " + files.length + "...");
+            return img;
+          }, function(err){
+            // If the check can't run (e.g. offline, model didn't load) we do NOT upload unchecked photos.
+            console.error(err); unchecked++; return null;
+          });
+        }).then(function(img){
+          if(!img) return false;
           var thumb = scaleToJpeg(img, 400, 60000);
           var full = scaleToJpeg(img, 1280, 650000);
           var thumbRef = db.collection("weddingDrinkPhotos").doc();
@@ -946,15 +998,19 @@
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           batch.set(db.collection("weddingDrinkPhotoFull").doc(thumbRef.id), { full: full });
-          return batch.commit();
-        }).then(function(){ done++; }).catch(function(err){ console.error(err); failed++; });
+          return batch.commit().then(function(){ return true; });
+        }).then(function(uploaded){ if(uploaded) done++; }).catch(function(err){ console.error(err); failed++; });
       });
     }, Promise.resolve()).then(function(){
       photoUploading = false;
       $("photoUploadLabel").classList.remove("busy");
-      if(failed && !done) showToast("Couldn't upload. Try again on a better connection.");
-      else if(failed) showToast(done + " uploaded, " + failed + " failed.");
-      else showToast(done === 1 ? "Photo added!" : done + " photos added!");
+      var parts = [];
+      if(done) parts.push(done === 1 ? "Photo added" : done + " photos added");
+      if(rejected) parts.push(rejected === 1 ? "1 photo wasn't allowed in this gallery" : rejected + " photos weren't allowed in this gallery");
+      if(unchecked) parts.push("couldn't check " + unchecked + " (try again with a better connection)");
+      if(failed) parts.push(failed + " failed to upload");
+      var msg = parts.join("; ") + ".";
+      showToast(msg.charAt(0).toUpperCase() + msg.slice(1));
     });
   }
 
