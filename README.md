@@ -53,7 +53,9 @@ app can actually read/write data:
    [`firestore.rules`](firestore.rules) from this repo, then **Publish**.
    Without this step every read/write gets a `permission-denied` error.
    Re-paste and re-publish any time `firestore.rules` changes in this repo —
-   the file in the console doesn't update itself. (It changed most recently
+   the file in the console doesn't update itself, unless you deploy it with
+   `firebase deploy --only firestore:rules --project wedding-drink-tracker`
+   (uses the included `firebase.json`). (It changed most recently
    to add the Photos collections.)
 
 To change the admin passcode from the `cheers2026` default: edit it in both
