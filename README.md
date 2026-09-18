@@ -61,8 +61,8 @@ the file.
 
 Open the site, go to the **Admin** tab, enter your passcode, and either:
 
-- Click **"Load starter menu"** for 12 common wedding-bar drinks (beer, wine,
-  champagne, a few cocktails, a shot, water, a mocktail) and edit from there, or
+- Click **"Load starter menu"** for 7 basics (IPA, light beer, red and white
+  wine, champagne, water, a mocktail) and edit from there, or
 - Add your own drinks one by one — name, emoji, pour size in fl oz, category.
 
 Toggle any item off any time (e.g. once the bar runs out) — it disappears

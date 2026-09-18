@@ -310,7 +310,7 @@
 
           <div class="card">
             <div class="section-title">Manage Menu</div>
-            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (12 drinks)</button>
+            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (7 drinks)</button>
             <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
           </div>
 
@@ -349,11 +349,6 @@
     {name:"Red Wine", emoji:"🍷", oz:7, category:"Wine"},
     {name:"White Wine", emoji:"🥂", oz:7, category:"Wine"},
     {name:"Champagne Toast", emoji:"🍾", oz:4, category:"Champagne"},
-    {name:"Margarita", emoji:"🍹", oz:8, category:"Cocktail"},
-    {name:"Old Fashioned", emoji:"🥃", oz:4, category:"Cocktail"},
-    {name:"Moscow Mule", emoji:"🍸", oz:8, category:"Cocktail"},
-    {name:"Espresso Martini", emoji:"☕", oz:4, category:"Cocktail"},
-    {name:"Tequila Shot", emoji:"🥃", oz:1.5, category:"Shot"},
     {name:"Water", emoji:"💧", oz:12, category:"Non-Alcoholic"},
     {name:"Mocktail", emoji:"🍓", oz:8, category:"Non-Alcoholic"}
   ];
@@ -826,7 +821,7 @@
   $("seedMenuBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
     if(menuItems.length > 0){
-      if(!confirm("The menu already has items. Add the 12 starter drinks anyway?")) return;
+      if(!confirm("The menu already has items. Add the 7 starter drinks anyway?")) return;
     }
     var batch = db.batch();
     STARTER_MENU.forEach(function(item, i){
