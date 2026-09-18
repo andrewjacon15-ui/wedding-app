@@ -16,6 +16,10 @@ guests open on their phone.
   live countdown until the next one unlocks. Undoing a mis-tap clears it
   immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
+- **Share my night** — every guest can turn their stats into a cute
+  story-sized image (1080x1920) with their total, rank, a fun title like "Hop
+  Head" or "Hydration Hero", and their signature drink. On phones it opens the
+  share sheet (straight to Instagram Stories); elsewhere it saves the image.
 - **Leaderboard** — everyone's total liquid volume, ranked live, with a
   **Drink of the Night** card showing the most-logged drink and how many.
 - **Water check** — after every 3rd drink a guest logs, a cheeky "Water check?"

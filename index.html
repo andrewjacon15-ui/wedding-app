@@ -220,6 +220,15 @@
   .don .don-name{font-family:var(--display);text-transform:uppercase;letter-spacing:3px;font-size:1.5rem;color:var(--taupe);margin-top:8px;}
   .don .don-count{color:var(--muted);font-style:italic;font-size:1.05rem;margin-top:4px;}
   .don .don-runners{margin-top:12px;padding-top:10px;border-top:1px solid var(--peach-light);color:var(--muted);font-size:.95rem;font-style:italic;}
+  /* Share my night */
+  #shareModal{position:fixed;inset:0;background:rgba(40,28,20,.94);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow:auto;}
+  #shareModal.show{display:flex;}
+  #shareModal .lb-close{position:absolute;top:14px;right:16px;background:none;color:var(--cream);font-size:2rem;line-height:1;padding:6px 12px;}
+  #shareModal img{max-width:100%;max-height:68vh;object-fit:contain;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+  #shareModal .share-actions{display:flex;gap:10px;width:100%;max-width:340px;margin-top:16px;}
+  #shareModal .share-actions .btn-primary{margin-top:0;flex:1;}
+  #shareModal .share-save{flex:1;background:var(--cream);}
+  #shareModal .lb-cap{color:var(--peach);font-style:italic;margin-top:12px;font-size:.95rem;text-align:center;max-width:320px;}
   /* Water check */
   #waterNudge{position:fixed;inset:0;background:rgba(60,44,34,.55);z-index:260;display:none;align-items:center;justify-content:center;padding:24px;}
   #waterNudge.show{display:flex;}
@@ -318,6 +327,8 @@
             <div class="stat-box"><div class="n" id="myDrinkCount">0</div><div class="l">Drinks logged</div></div>
             <div class="stat-box"><div class="n" id="myRank">—</div><div class="l">Leaderboard rank</div></div>
           </div>
+          <button class="btn-primary" id="shareStatsBtn">Share my night</button>
+          <div class="export-hint" style="margin:10px 0 0;">Makes a story-sized image you can post to Instagram.</div>
         </div>
         <div class="card">
           <div class="section-title">My Recent Drinks</div>
@@ -468,6 +479,16 @@
   <button class="lb-close" id="lightboxClose" aria-label="Close">&times;</button>
   <img id="lightboxImg" alt="">
   <div class="lb-cap" id="lightboxCap"></div>
+</div>
+
+<div id="shareModal">
+  <button class="lb-close" id="shareClose" aria-label="Close">&times;</button>
+  <img id="shareImg" alt="Your night, ready to share">
+  <div class="share-actions">
+    <button class="btn-primary" id="shareNativeBtn">Share</button>
+    <button class="btn-secondary share-save" id="shareSaveBtn">Save image</button>
+  </div>
+  <div class="lb-cap" id="shareCap">On a phone you can also press and hold the image to save it.</div>
 </div>
 
 <div id="waterNudge">
@@ -1563,6 +1584,192 @@
       $("lightbox").classList.add("show");
       hideToast();
     }));
+  });
+
+  // ---- "Share my night": a personal story-sized card any guest can make ----
+  function roundRectPath(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function seededRandom(seedStr){
+    var h = 1779033703 ^ seedStr.length;
+    for(var i = 0; i < seedStr.length; i++){ h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    var a = h >>> 0;
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  // Shrink a font until the text fits maxWidth. fontTpl uses {px} as the size.
+  function fitText(ctx, text, fontTpl, startPx, maxWidth){
+    var px = startPx;
+    ctx.font = fontTpl.replace("{px}", px);
+    while(ctx.measureText(text).width > maxWidth && px > 20){ px -= 2; ctx.font = fontTpl.replace("{px}", px); }
+    return px;
+  }
+
+  function myNightStats(){
+    var me = myGuestDoc;
+    if(!me || me.archived === true || (me.drinkCount || 0) <= 0) return null;
+    var ranked = activeRankedGuests();
+    var rankIdx = ranked.findIndex(function(g){ return g.id === guestId; });
+    var by = me.byItem || {};
+    var entries = Object.keys(by).map(function(id){
+      return { id: id, count: Number(by[id]) || 0, item: menuItems.find(function(m){ return m.id === id; }) };
+    }).filter(function(e){ return e.count > 0 && e.item; }).sort(function(a, b){ return b.count - a.count; });
+    var byCat = {};
+    entries.forEach(function(e){ var c = e.item.category || "Drink"; byCat[c] = (byCat[c] || 0) + e.count; });
+    var topCat = Object.keys(byCat).sort(function(a, b){ return byCat[b] - byCat[a]; })[0] || "";
+    var nonAlc = byCat["Non-Alcoholic"] || 0;
+    var drinks = me.drinkCount || 0;
+    var title = "Life of the Party";
+    if(rankIdx === 0 && ranked.length > 1) title = "Bar Champion";
+    else if(nonAlc >= 2 && nonAlc / drinks >= 0.3) title = "Hydration Hero";
+    else if(topCat === "Wine") title = "Wine Connoisseur";
+    else if(topCat === "Beer") title = "Hop Head";
+    else if(topCat === "Champagne") title = "Bubbly Enthusiast";
+    else if(topCat === "Cocktail") title = "Cocktail Captain";
+    else if(topCat === "Non-Alcoholic") title = (entries[0] && /water/i.test(entries[0].item.name)) ? "Hydration Hero" : "Mocktail Maven";
+    return {
+      name: me.name || guestName || "Guest",
+      totalMl: me.totalMl || 0,
+      drinks: drinks,
+      rank: rankIdx >= 0 ? rankIdx + 1 : null,
+      guests: ranked.length,
+      fav: entries[0] || null,
+      title: title
+    };
+  }
+
+  function buildMyNightCard(s){
+    var fontsReady = Promise.all([
+      document.fonts.load('80px "Amarante"'),
+      document.fonts.load('600 30px "Crimson Text"'),
+      document.fonts.load('italic 30px "Crimson Text"')
+    ]).catch(function(){});
+    return fontsReady.then(function(){
+      var W = 1080, H = 1920;
+      var c = document.createElement("canvas"); c.width = W; c.height = H;
+      var ctx = c.getContext("2d");
+      var TAUPE = "#867060", DARK = "#5f4c3e", MUTED = "#9a8878", PEACH = "#e9d5c5", GOLD = "#b08a6b";
+      var DISPLAY = '"Amarante", Georgia, serif', BODY = '"Crimson Text", Georgia, serif';
+
+      var bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, "#FFF1E6"); bg.addColorStop(0.55, "#FFFAF5"); bg.addColorStop(1, "#F8E6D8");
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      // Confetti + sparkles around the edges, seeded so a guest's card is always the same
+      var rnd = seededRandom((guestId || "guest") + s.drinks);
+      var colors = ["#e9d5c5", "#d9b8a6", "#b08a6b", "#f1c9b8", "#c9a48a"];
+      for(var i = 0; i < 70; i++){
+        var x = rnd() * W, y = rnd() * H, r = 6 + rnd() * 14;
+        if(x > 150 && x < 930 && y > 290 && y < 1840) continue;
+        ctx.globalAlpha = 0.5 + rnd() * 0.4;
+        ctx.fillStyle = colors[Math.floor(rnd() * colors.length)];
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1; ctx.fillStyle = GOLD; ctx.font = '54px serif'; ctx.textAlign = "center";
+      [[140, 470], [940, 430], [110, 1010], [975, 1080], [150, 1600], [930, 1640]].forEach(function(p){ ctx.fillText("✦", p[0], p[1]); });
+
+      ctx.strokeStyle = PEACH; ctx.lineWidth = 4; roundRectPath(ctx, 44, 44, W - 88, H - 88, 44); ctx.stroke();
+
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+      // Header (kept below Instagram's top bar)
+      ctx.fillStyle = TAUPE; ctx.font = '70px ' + DISPLAY; drawSpaced(ctx, "ANDREW & LYDIA", W / 2, 350, 8);
+      ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "NOVEMBER 7, 2026", W / 2, 406, 5);
+
+      ctx.font = '150px serif'; ctx.fillStyle = DARK; ctx.fillText("🥂", W / 2, 590);
+
+      var nm = (s.name.toUpperCase() + "'S NIGHT");
+      ctx.fillStyle = TAUPE; fitText(ctx, nm, '{px}px ' + DISPLAY, 66, 880);
+      ctx.fillText(nm, W / 2, 700);
+      ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - 70, 736, 140, 3);
+
+      // Big number
+      var oz = fmtNum(mlToOz(s.totalMl), 1);
+      ctx.fillStyle = TAUPE; fitText(ctx, oz, '{px}px ' + DISPLAY, 300, 820);
+      ctx.fillText(oz, W / 2, 1000);
+      ctx.font = '54px ' + DISPLAY; drawSpaced(ctx, "FL OZ", W / 2, 1076, 10);
+      ctx.fillStyle = MUTED; ctx.font = 'italic 46px ' + BODY; ctx.fillText("of pure celebration", W / 2, 1146);
+
+      // Pills
+      var pills = [plural(s.drinks, "drink").toUpperCase()];
+      if(s.rank) pills.push("#" + s.rank + " ON THE BOARD");
+      ctx.font = '38px ' + DISPLAY;
+      var padX = 36, gap = 24;
+      var widths = pills.map(function(t){ return ctx.measureText(t).width + padX * 2; });
+      var totalW = widths.reduce(function(a, b){ return a + b; }, 0) + gap * (pills.length - 1);
+      var px0 = (W - totalW) / 2;
+      pills.forEach(function(t, i){
+        ctx.fillStyle = "#f8efe7"; roundRectPath(ctx, px0, 1214, widths[i], 92, 46); ctx.fill();
+        ctx.strokeStyle = PEACH; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = DARK; ctx.textAlign = "center"; ctx.fillText(t, px0 + widths[i] / 2, 1274);
+        px0 += widths[i] + gap;
+      });
+
+      // Title badge
+      ctx.fillStyle = MUTED; ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "TONIGHT'S TITLE", W / 2, 1400, 6);
+      ctx.fillStyle = DARK; fitText(ctx, s.title.toUpperCase(), '{px}px ' + DISPLAY, 68, 880);
+      ctx.fillText(s.title.toUpperCase(), W / 2, 1478);
+
+      // Signature sip
+      if(s.fav){
+        ctx.font = '90px serif'; ctx.fillStyle = DARK; ctx.fillText(s.fav.item.emoji || "🥂", W / 2, 1600);
+        ctx.fillStyle = TAUPE; ctx.font = 'italic 44px ' + BODY;
+        ctx.fillText("Signature sip: " + s.fav.item.name + (s.fav.count > 1 ? " (" + s.fav.count + "x)" : ""), W / 2, 1668);
+      }
+      var pints = s.totalMl / 473.176;
+      ctx.fillStyle = MUTED; ctx.font = 'italic 38px ' + BODY;
+      ctx.fillText("That's about " + fmtNum(pints, 1) + (fmtNum(pints, 1) === "1" ? " pint" : " pints") + " of cheer", W / 2, 1728);
+
+      ctx.fillStyle = MUTED; ctx.font = 'italic 34px ' + BODY;
+      ctx.fillText("Thank you for celebrating with us", W / 2, 1800);
+
+      return new Promise(function(resolve){ c.toBlob(resolve, "image/png"); });
+    });
+  }
+
+  var shareBlob = null, shareUrl = null;
+  function closeShareModal(){
+    $("shareModal").classList.remove("show");
+    $("shareImg").removeAttribute("src");
+    if(shareUrl){ URL.revokeObjectURL(shareUrl); shareUrl = null; }
+    shareBlob = null;
+  }
+  $("shareClose").addEventListener("click", closeShareModal);
+  $("shareModal").addEventListener("click", function(e){ if(e.target === $("shareModal")) closeShareModal(); });
+  $("shareSaveBtn").addEventListener("click", function(){
+    if(shareBlob) downloadBlob("my-night-andrew-lydia.png", shareBlob);
+  });
+  $("shareNativeBtn").addEventListener("click", function(){
+    if(!shareBlob) return;
+    var file = new File([shareBlob], "my-night-andrew-lydia.png", {type: "image/png"});
+    navigator.share({ files: [file], title: "My night at Andrew & Lydia's wedding" }).catch(function(){});
+  });
+
+  $("shareStatsBtn").addEventListener("click", function(){
+    var s = myNightStats();
+    if(!s){ showToast("Log a drink first, then come back to make your card!"); return; }
+    showToast("Making your card...");
+    buildMyNightCard(s).then(function(blob){
+      if(!blob){ showToast("Couldn't make the card."); return; }
+      shareBlob = blob;
+      if(shareUrl) URL.revokeObjectURL(shareUrl);
+      shareUrl = URL.createObjectURL(blob);
+      $("shareImg").src = shareUrl;
+      var canShare = false;
+      try{ canShare = !!(navigator.canShare && navigator.share && navigator.canShare({ files: [new File([blob], "x.png", {type: "image/png"})] })); }catch(e){}
+      $("shareNativeBtn").style.display = canShare ? "" : "none";
+      $("shareModal").classList.add("show");
+      hideToast();
+    }).catch(function(e){ console.error(e); showToast("Couldn't make the card."); });
   });
 
   // ---- Purge / remove guests ----
