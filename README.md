@@ -19,7 +19,8 @@ guests open on their phone.
 - **Leaderboard** — everyone's total liquid volume, ranked live.
 - **Drink notes** — an optional 140-character note can ride along with any
   drink. Notes show in My Recent Drinks and in a "Notes from the Bar" feed on
-  the Leaderboard tab; admins can hide any note.
+  the Leaderboard tab; admins can hide any note. Swear words are masked but
+  stay readable (`f*ck`, `sh*t`).
 - **Guest photos** — a Photos tab where anyone can snap or pick photos (up to
   10 at a time). Photos are shrunk on the phone and stored in Firestore, so
   no paid Storage plan is needed. Tap a photo to view it larger; admins can
@@ -32,7 +33,9 @@ guests open on their phone.
   best-effort filter, not a guarantee: it runs in the guest's browser (a
   determined person could bypass it) and no model is perfect, so keep an eye on
   the gallery and use Admin Delete for anything that slips through. The first
-  photo check downloads about 5 MB once per phone.
+  photo check downloads about 7 MB once per phone. Thresholds are deliberately
+  lenient so drinks, toasts, dancing and kisses go through; tune `NSFW_EXPLICIT_LIMIT`
+  and `NSFW_SEXY_LIMIT` in `index.html` if you want it stricter.
 - **Matches the wedding website** — cream and taupe palette, Amarante
   headings, and Crimson Text body copy, to look like part of the same site.
 - **Admin tab** — passcode-gated menu, event-title, and guest management,

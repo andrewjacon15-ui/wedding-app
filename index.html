@@ -448,6 +448,22 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
+  // Swear-word masking for drink notes. The word stays readable: the first vowel
+  // after the first letter becomes "*" (fuck -> f*ck, shit -> sh*t, ass -> a*s).
+  // Applied both when a note is saved and when it is shown. Long stems match
+  // inside words (bullshit -> bullsh*t); short ones only as whole words so
+  // "glass" and "cocktail" are left alone.
+  var PROFANE_STEMS = ["fuck","shit","bitch","cunt","pussy","whore","slut","bastard","asshole","twat","wank","prick","piss","damn","nigger","nigga","faggot"];
+  var PROFANE_WORDS = ["ass","asses","dick","dicks","dickhead","cock","cocks"];
+  var PROFANE_RE = new RegExp("(?:" + PROFANE_STEMS.join("|") + ")|\\b(?:" + PROFANE_WORDS.join("|") + ")\\b", "gi");
+  function maskWord(w){
+    var v = w.slice(1).search(/[aeiou]/i);
+    var i = v === -1 ? 1 : v + 1;
+    return w.slice(0, i) + "*" + w.slice(i + 1);
+  }
+  function censorProfanity(text){
+    return String(text == null ? "" : text).replace(PROFANE_RE, maskWord);
+  }
   function fmtNum(n, decimals){
     return Number(n).toFixed(decimals==null?1:decimals).replace(/\.0$/,"");
   }
@@ -518,12 +534,25 @@
 
   // ---- Tabs ----
   var navButtons = document.querySelectorAll("nav.bottom-nav button");
-  function showTab(name){
+  var TAB_NAMES = ["drinks", "me", "leaderboard", "photos", "admin"];
+  // The current tab is kept in the URL hash (and localStorage as a backup) so a
+  // refresh puts you back where you were instead of on Drinks.
+  function showTab(name, restoring){
+    if(TAB_NAMES.indexOf(name) === -1) name = "drinks";
     navButtons.forEach(function(b){ b.classList.toggle("active", b.dataset.tab === name); });
     document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
     $("tab-" + name).classList.add("active");
-    window.scrollTo(0, 0);
+    if(!restoring) window.scrollTo(0, 0);
+    try{ localStorage.setItem("wdt_tab", name); }catch(e){}
+    try{ history.replaceState(null, "", "#" + name); }catch(e){}
     if(name === "photos") loadModerationModel().catch(function(){});
+  }
+  function restoreTab(){
+    var fromHash = (location.hash || "").replace("#", "");
+    var saved = null;
+    try{ saved = localStorage.getItem("wdt_tab"); }catch(e){}
+    var name = TAB_NAMES.indexOf(fromHash) !== -1 ? fromHash : (TAB_NAMES.indexOf(saved) !== -1 ? saved : "drinks");
+    if(name !== "drinks") showTab(name, true);
   }
   navButtons.forEach(function(btn){
     btn.addEventListener("click", function(){ showTab(btn.dataset.tab); });
@@ -656,7 +685,7 @@
       return;
     }
 
-    var note = ($("drinkNote").value || "").trim().slice(0, 140);
+    var note = censorProfanity(($("drinkNote").value || "").trim().slice(0, 140));
     var batch = db.batch();
     var logRef = db.collection("weddingDrinkLog").doc();
     var logData = {
@@ -808,7 +837,7 @@
         '<div class="li"><span class="emoji">'+escapeHtml(l.emoji||'🥂')+'</span>'+
         '<span class="meta"><span class="n">'+escapeHtml(l.itemName)+'</span>'+
         '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span>'+
-        (l.message ? '<span class="note">&ldquo;'+escapeHtml(l.message)+'&rdquo;</span>' : '')+
+        (l.message ? '<span class="note">&ldquo;'+escapeHtml(censorProfanity(l.message))+'&rdquo;</span>' : '')+
         '</span></div>'+
         (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'">Undo</button>')+
         '</div>';
@@ -869,7 +898,7 @@
       return '<div class="feed-item"><div class="fm">'+
         '<div><span class="fwho">'+escapeHtml(l.guestName||"A guest")+'</span>'+
         '<span class="fwhat">'+escapeHtml(l.emoji||"")+' '+escapeHtml(l.itemName||"")+' · '+when+'</span></div>'+
-        '<div class="fmsg">&ldquo;'+escapeHtml(l.message)+'&rdquo;</div></div>'+
+        '<div class="fmsg">&ldquo;'+escapeHtml(censorProfanity(l.message))+'&rdquo;</div></div>'+
         (adminUnlocked ? '<button class="btn-ghost" data-hide-note="'+l.id+'">Hide</button>' : '')+
         '</div>';
     }).join("");
@@ -937,8 +966,8 @@
   // best-effort filter, not a guarantee: it runs in the guest's browser, so a
   // determined person could bypass it, and admins can still delete any photo.
   var NSFW_BASE = "vendor/nsfw/";
-  var NSFW_EXPLICIT_LIMIT = 0.4;  // Porn + Hentai
-  var NSFW_SEXY_LIMIT = 0.85;     // suggestive; high bar so formal wear isn't flagged
+  var NSFW_EXPLICIT_LIMIT = 0.8;  // Porn + Hentai
+  var NSFW_SEXY_LIMIT = 0.9;      // suggestive; high bar so kisses, dresses and beach photos pass
   var nsfwModelPromise = null;
 
   function loadModerationModel(){
@@ -946,7 +975,7 @@
     nsfwModelPromise = new Promise(function(resolve, reject){
       var s = document.createElement("script");
       s.src = NSFW_BASE + "nsfwjs.min.js";
-      s.onload = function(){ window.nsfwjs.load(NSFW_BASE + "model/").then(resolve, reject); };
+      s.onload = function(){ window.nsfwjs.load(NSFW_BASE + "model_mid/", { type: "graph" }).then(resolve, reject); };
       s.onerror = function(){ reject(new Error("moderation script failed to load")); };
       document.head.appendChild(s);
     }).catch(function(e){ nsfwModelPromise = null; throw e; });
@@ -1249,6 +1278,7 @@
     });
   }
 
+  restoreTab();
   applyUnitUI();
 })();
 </script>
