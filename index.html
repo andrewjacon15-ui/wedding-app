@@ -190,6 +190,22 @@
   #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
   #toast button{color:var(--peach);background:none;font-style:italic;text-decoration:underline;font-size:1rem;white-space:nowrap;}
   .footer-note{text-align:center;color:var(--muted);font-style:italic;font-size:.9rem;padding:14px 30px 6px;line-height:1.5;}
+  .admin-link{background:none;color:var(--muted);font-style:italic;font-size:.85rem;text-decoration:underline;padding:8px 12px;margin-top:4px;opacity:.75;}
+  nav.bottom-nav button{font-size:1.02rem;}
+  /* Drink note + feed */
+  .note-wrap{margin-bottom:14px;}
+  .note-wrap input{font-style:italic;}
+  .note-count{display:block;text-align:right;font-size:.8rem;color:var(--muted);font-style:italic;margin-top:4px;}
+  .log-row .li .meta .note{font-style:italic;color:var(--taupe);font-size:.98rem;margin-top:2px;}
+  .feed-item{padding:12px 0;border-bottom:1px solid var(--peach-light);display:flex;gap:10px;justify-content:space-between;align-items:flex-start;}
+  .feed-item:last-child{border-bottom:none;}
+  .feed-item .fm{flex:1;min-width:0;}
+  .feed-item .fwho{font-weight:600;color:var(--taupe-dark);font-size:1.02rem;}
+  .feed-item .fwhat{color:var(--muted);font-size:.85rem;font-style:italic;margin-left:6px;}
+  .feed-item .fmsg{color:var(--ink);font-style:italic;margin-top:3px;font-size:1.02rem;overflow-wrap:anywhere;}
+  .feed-item .btn-ghost{color:var(--danger);text-decoration:none;font-size:.9rem;}
+  .photo-tile.is-hidden{opacity:.4;}
+  .photo-tile .photo-flag{position:absolute;left:4px;bottom:4px;background:rgba(95,76,62,.85);color:var(--cream);font-size:.7rem;padding:2px 7px;border-radius:999px;font-style:italic;}
   .conn-banner{background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);border-radius:3px;padding:10px 12px;font-size:.95rem;font-style:italic;margin-bottom:14px;display:none;}
   .conn-banner.show{display:block;}
   .unit-toggle{display:flex;gap:6px;justify-content:center;margin:2px 0 16px;}
@@ -250,6 +266,10 @@
         <div class="card">
           <div class="section-title">The Bar Menu</div>
           <div class="cooldown-banner" id="cooldownBanner">Next drink unlocks in <span id="cooldownTime">0:00</span></div>
+          <div class="note-wrap">
+            <input type="text" id="drinkNote" maxlength="140" placeholder="Add a note with your next drink (optional)" autocomplete="off">
+            <span class="note-count" id="drinkNoteCount"></span>
+          </div>
           <div class="drink-grid" id="menuGrid">
             <div class="empty-state">Loading the bar menu…</div>
           </div>
@@ -282,6 +302,10 @@
         <div class="card">
           <div class="section-title">Leaderboard</div>
           <div id="leaderboardList"><div class="empty-state">No one's logged a drink yet…</div></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Notes from the Bar</div>
+          <div id="notesFeed"><div class="empty-state">No notes yet. Add one with your next drink!</div></div>
         </div>
       </section>
 
@@ -365,10 +389,9 @@
     <button data-tab="me">My Stats</button>
     <button data-tab="leaderboard">Leaderboard</button>
     <button data-tab="photos">Photos</button>
-    <button data-tab="admin">Admin</button>
   </nav>
 
-  <div class="footer-note">Please drink responsibly and look out for each other.</div>
+  <div class="footer-note">Please drink responsibly and look out for each other.<br><button class="admin-link" id="adminLink">Admin</button></div>
 </div>
 
 <div id="lightbox">
@@ -494,14 +517,16 @@
 
   // ---- Tabs ----
   var navButtons = document.querySelectorAll("nav.bottom-nav button");
+  function showTab(name){
+    navButtons.forEach(function(b){ b.classList.toggle("active", b.dataset.tab === name); });
+    document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
+    $("tab-" + name).classList.add("active");
+    window.scrollTo(0, 0);
+  }
   navButtons.forEach(function(btn){
-    btn.addEventListener("click", function(){
-      navButtons.forEach(function(b){ b.classList.remove("active"); });
-      btn.classList.add("active");
-      document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
-      $("tab-" + btn.dataset.tab).classList.add("active");
-    });
+    btn.addEventListener("click", function(){ showTab(btn.dataset.tab); });
   });
+  $("adminLink").addEventListener("click", function(){ showTab("admin"); });
 
   // ---- Unit toggle ----
   function applyUnitUI(){
@@ -612,6 +637,12 @@
   }
   ensureGuestDoc();
 
+  function updateNoteCount(){
+    var n = ($("drinkNote").value || "").length;
+    $("drinkNoteCount").textContent = n >= 100 ? (n + " / 140") : "";
+  }
+  $("drinkNote").addEventListener("input", updateNoteCount);
+
   function logDrink(itemId){
     if(!firebaseReady){ showToast("Can't log — Firebase isn't set up."); return; }
     if(!guestId){ $("nameGate").style.display = "flex"; return; }
@@ -623,9 +654,10 @@
       return;
     }
 
+    var note = ($("drinkNote").value || "").trim().slice(0, 140);
     var batch = db.batch();
     var logRef = db.collection("weddingDrinkLog").doc();
-    batch.set(logRef, {
+    var logData = {
       guestId: guestId,
       guestName: guestName,
       itemId: item.id,
@@ -635,7 +667,9 @@
       volumeMl: item.volumeMl,
       voided: false,
       loggedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if(note) logData.message = note;
+    batch.set(logRef, logData);
     var guestRef = db.collection("weddingDrinkGuests").doc(guestId);
     batch.set(guestRef, {
       name: guestName,
@@ -651,6 +685,7 @@
       markWriteOk();
       optimisticLastDrinkAt = Date.now();
       updateCooldownUI();
+      if(note){ $("drinkNote").value = ""; updateNoteCount(); }
       showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)", function(){
         undoLog(logRef.id, item.volumeMl);
       });
@@ -770,7 +805,9 @@
       return '<div class="log-row '+(l.voided?'voided':'')+'">'+
         '<div class="li"><span class="emoji">'+escapeHtml(l.emoji||'🥂')+'</span>'+
         '<span class="meta"><span class="n">'+escapeHtml(l.itemName)+'</span>'+
-        '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span></span></div>'+
+        '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span>'+
+        (l.message ? '<span class="note">&ldquo;'+escapeHtml(l.message)+'&rdquo;</span>' : '')+
+        '</span></div>'+
         (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'">Undo</button>')+
         '</div>';
     }).join("");
@@ -802,6 +839,46 @@
         '<div class="c">'+(g.drinkCount||0)+' drinks</div></div>'+
         '</div>';
     }).join("");
+  }
+
+  // ==========================================================
+  // Notes feed (optional messages attached to drinks)
+  // ==========================================================
+  var recentLogs = [];
+  if(firebaseReady){
+    db.collection("weddingDrinkLog").orderBy("loggedAt","desc").limit(80).onSnapshot(function(snap){
+      recentLogs = [];
+      snap.forEach(function(doc){ recentLogs.push(Object.assign({id:doc.id}, doc.data())); });
+      renderNotesFeed();
+    }, function(err){ console.error(err); });
+  }
+
+  function renderNotesFeed(){
+    var box = $("notesFeed");
+    var notes = recentLogs.filter(function(l){
+      return l.message && l.voided !== true && l.messageHidden !== true;
+    }).slice(0, 30);
+    if(!notes.length){
+      box.innerHTML = '<div class="empty-state">No notes yet. Add one with your next drink!</div>';
+      return;
+    }
+    box.innerHTML = notes.map(function(l){
+      var when = l.loggedAt ? timeAgo(l.loggedAt.toDate()) : "just now";
+      return '<div class="feed-item"><div class="fm">'+
+        '<div><span class="fwho">'+escapeHtml(l.guestName||"A guest")+'</span>'+
+        '<span class="fwhat">'+escapeHtml(l.emoji||"")+' '+escapeHtml(l.itemName||"")+' · '+when+'</span></div>'+
+        '<div class="fmsg">&ldquo;'+escapeHtml(l.message)+'&rdquo;</div></div>'+
+        (adminUnlocked ? '<button class="btn-ghost" data-hide-note="'+l.id+'">Hide</button>' : '')+
+        '</div>';
+    }).join("");
+    box.querySelectorAll("[data-hide-note]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if(!confirm("Hide this note from the feed for everyone?")) return;
+        db.collection("weddingDrinkLog").doc(btn.dataset.hideNote).update({ messageHidden: true, code: WEDDING_CODE })
+          .then(function(){ showToast("Note hidden."); })
+          .catch(function(e){ console.error(e); showToast("Couldn't hide that note."); });
+      });
+    });
   }
 
   // ==========================================================
@@ -890,34 +967,47 @@
 
   function renderPhotoGallery(){
     var grid = $("photoGrid");
-    var visible = photos.filter(function(p){ return p.hidden !== true && isImageDataUrl(p.thumb); });
+    // Admins also see hidden photos (dimmed) so they can delete them.
+    var visible = photos.filter(function(p){
+      return isImageDataUrl(p.thumb) && (adminUnlocked || p.hidden !== true);
+    });
     if(!visible.length){
       grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">No photos yet. Be the first!</div>';
       return;
     }
     grid.innerHTML = visible.map(function(p){
-      return '<div class="photo-tile" data-photo="'+p.id+'">'+
+      return '<div class="photo-tile'+(p.hidden===true?' is-hidden':'')+'" data-photo="'+p.id+'">'+
         '<img src="'+p.thumb+'" alt="Photo shared by '+escapeHtml(p.guestName||"a guest")+'" loading="lazy">'+
-        (adminUnlocked ? '<button class="photo-hide" data-hide="'+p.id+'">Hide</button>' : '')+
+        (adminUnlocked ? '<button class="photo-hide" data-delete="'+p.id+'">Delete</button>' : '')+
+        (adminUnlocked && p.hidden===true ? '<span class="photo-flag">Hidden</span>' : '')+
         '</div>';
     }).join("");
     grid.querySelectorAll(".photo-tile").forEach(function(tile){
       tile.addEventListener("click", function(){ openLightbox(tile.dataset.photo); });
     });
-    grid.querySelectorAll("[data-hide]").forEach(function(btn){
+    grid.querySelectorAll("[data-delete]").forEach(function(btn){
       btn.addEventListener("click", function(ev){
         ev.stopPropagation();
-        hidePhoto(btn.dataset.hide);
+        deletePhoto(btn.dataset.delete);
       });
     });
   }
 
-  function hidePhoto(id){
+  // Deleting can't check the passcode directly (delete requests carry no data),
+  // so the rules only allow a delete once the photo is already hidden -- and
+  // hiding needs the passcode. Step 1 hides it, step 2 removes both docs.
+  function deletePhoto(id){
     if(!firebaseReady) return;
-    if(!confirm("Hide this photo from the gallery for everyone?")) return;
-    db.collection("weddingDrinkPhotos").doc(id).update({ hidden: true, code: WEDDING_CODE })
-      .then(function(){ showToast("Photo hidden."); })
-      .catch(function(e){ console.error(e); showToast("Couldn't hide that photo."); });
+    if(!confirm("Permanently delete this photo for everyone? This can't be undone.")) return;
+    var ref = db.collection("weddingDrinkPhotos").doc(id);
+    ref.update({ hidden: true, code: WEDDING_CODE }).then(function(){
+      var batch = db.batch();
+      batch.delete(ref);
+      batch.delete(db.collection("weddingDrinkPhotoFull").doc(id));
+      return batch.commit();
+    }).then(function(){
+      showToast("Photo deleted.");
+    }).catch(function(e){ console.error(e); showToast("Couldn't delete that photo."); });
   }
 
   function openLightbox(id){
@@ -943,6 +1033,7 @@
     $("adminLockCard").style.display = adminUnlocked ? "none" : "block";
     $("adminPanels").style.display = adminUnlocked ? "block" : "none";
     renderPhotoGallery();
+    renderNotesFeed();
   }
   refreshAdminGate();
 

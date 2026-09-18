@@ -27,7 +27,9 @@ rules_version = '2';
 //   - Anyone with the link can upload photos; hiding one from the gallery (admin
 //     only) requires the code. Photos are size-capped so a single upload can't
 //     bloat the database.
-//   - Hard deletes are blocked entirely. "Undo" a drink and admin "Remove"/"Purge"
+//   - Photos can be hard-deleted only after being hidden (hiding needs the code).
+//   - Optional drink notes are capped at 140 chars; hiding one is admin-only.
+//   - Every other hard delete is blocked entirely. "Undo" a drink and admin "Remove"/"Purge"
 //     both work by marking things (voided / archived) rather than deleting them --
 //     removed guests reappear automatically (unarchived) if they log a new drink.
 service cloud.firestore {
@@ -72,14 +74,18 @@ service cloud.firestore {
       allow update: if request.resource.data.diff(resource.data).affectedKeys()
                    .hasOnly(["hidden", "code"])
                    && request.resource.data.code == "cheers2026";
-      allow delete: if false;
+      // Delete requests carry no data, so the passcode can't be checked here.
+      // Instead a photo can only be deleted once it's already hidden, and
+      // hiding requires the passcode (see the update rule above).
+      allow delete: if resource.data.hidden == true;
     }
 
     match /weddingDrinkPhotoFull/{photoId} {
       allow read: if true;
       allow create: if request.resource.data.full is string
                    && request.resource.data.full.size() < 900000;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if get(/databases/$(database)/documents/weddingDrinkPhotos/$(photoId)).data.hidden == true;
     }
 
     match /weddingDrinkLog/{logId} {
@@ -89,9 +95,15 @@ service cloud.firestore {
                    && request.resource.data.itemName is string
                    && request.resource.data.volumeMl is number
                    && request.resource.data.volumeMl > 0
-                   && request.resource.data.voided == false;
+                   && request.resource.data.voided == false
+                   && request.resource.data.get('message', '') is string
+                   && request.resource.data.get('message', '').size() <= 140;
+      // Anyone can void a drink (undo); hiding a note from the feed is admin-only.
       allow update: if request.resource.data.diff(resource.data).affectedKeys()
-                   .hasOnly(["voided"]);
+                   .hasOnly(["voided"])
+                   || (request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(["messageHidden", "code"])
+                       && request.resource.data.code == "cheers2026");
       allow delete: if false;
     }
   }

@@ -16,10 +16,13 @@ website guests open on their phone.
   immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
 - **Leaderboard** — everyone's total liquid volume, ranked live.
+- **Drink notes** — an optional 140-character note can ride along with any
+  drink. Notes show in My Recent Drinks and in a "Notes from the Bar" feed on
+  the Leaderboard tab; admins can hide any note.
 - **Guest photos** — a Photos tab where anyone can snap or pick photos (up to
   10 at a time). Photos are shrunk on the phone and stored in Firestore, so
   no paid Storage plan is needed. Tap a photo to view it larger; admins can
-  hide any photo from the Admin tab.
+  permanently delete any photo (Admin is the small link under the footer).
 - **Matches the wedding website** — cream and taupe palette, Amarante
   headings, and Crimson Text body copy, to look like part of the same site.
 - **Admin tab** — passcode-gated menu, event-title, and guest management,
@@ -28,7 +31,8 @@ website guests open on their phone.
   or remove one guest at a time. Soft-delete under the hood (see below), so a
   removed guest's history isn't destroyed — they just drop off the board
   until they log another drink, at which point they reappear starting fresh.
-- **Mobile-first** — big tap targets, bottom tab nav, works great added to a
+- **Mobile-first** — big tap targets, a four-tab bottom bar (Admin lives in a
+  small footer link so the bar never feels cramped), works great added to a
   phone's home screen.
 
 ## How it works
