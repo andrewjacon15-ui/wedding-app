@@ -13,12 +13,12 @@
 // of trying to connect.
 // ---------------------------------------------------------------------------
 window.FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyAUv-l-sDOek9Ob35bpE-3mcjZfRgSCPXw",
+  authDomain: "wedding-drink-tracker.firebaseapp.com",
+  projectId: "wedding-drink-tracker",
+  storageBucket: "wedding-drink-tracker.firebasestorage.app",
+  messagingSenderId: "367201485491",
+  appId: "1:367201485491:web:6a4691791ae05491e866c6"
 };
 
 // A shared passcode required to edit the drink menu and event settings (lightweight

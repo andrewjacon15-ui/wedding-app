@@ -27,26 +27,24 @@ guest's phone sees the same live menu, totals, and leaderboard. There's no
 real user login — guests just type their name, which keeps it frictionless
 for a party.
 
-## One-time setup (~5 minutes)
+## One-time setup
 
-The repo ships with `firebase-config.js` empty on purpose (an app with a
-teammate's live database keys baked into a public repo is a bad default).
-Point it at your own free Firebase project:
+`firebase-config.js` is already wired to the `wedding-drink-tracker` Firebase
+project's web app config, and the admin passcode is `cheers2026` (change it —
+see below). Two things still need doing in the Firebase console before the
+app can actually read/write data:
 
-1. Go to the [Firebase console](https://console.firebase.google.com) → **Add
-   project** (the free "Spark" plan is plenty for this — no credit card).
-2. In your new project, click the `</>` (web) icon to register a web app,
-   then copy the `firebaseConfig` object it gives you.
-3. Paste those values into [`firebase-config.js`](firebase-config.js) in this
-   repo (`apiKey`, `authDomain`, `projectId`, etc.).
-4. In the Firebase console, go to **Firestore Database** → **Create database**
-   (start in production mode), then go to the **Rules** tab and paste in the
-   contents of [`firestore.rules`](firestore.rules) from this repo.
-5. In both the rules you just pasted AND in `firebase-config.js`, set the
-   passcode: replace the two `"YOUR_WEDDING_CODE"` placeholders in the rules
-   with a passcode of your choice, click **Publish**, then set
-   `window.WEDDING_CODE` in `firebase-config.js` to that **exact same** value.
-6. Commit and push both files.
+1. Go to the [Firebase console](https://console.firebase.google.com/project/wedding-drink-tracker/firestore)
+   → **Firestore Database** → **Create database** (production mode is fine,
+   pick any region) if you haven't already.
+2. Go to the **Rules** tab and paste in the contents of
+   [`firestore.rules`](firestore.rules) from this repo, then **Publish**.
+   Without this step every read/write gets a `permission-denied` error.
+
+To change the admin passcode from the `cheers2026` default: edit it in both
+`firestore.rules` (two spots) and `firebase-config.js` (`window.WEDDING_CODE`)
+to the same new value, publish the rules in the console, and commit + push
+the file.
 
 ### Load your bar menu
 

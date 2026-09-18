@@ -1,8 +1,8 @@
 rules_version = '2';
 
 // Paste this into Firebase Console > Firestore Database > Rules, then Publish.
-// Replace YOUR_WEDDING_CODE with the exact same value you put in firebase-config.js
-// (window.WEDDING_CODE) -- both spots below.
+// The passcode below ("cheers2026") matches window.WEDDING_CODE in
+// firebase-config.js. If you change one, change the other (both spots below).
 //
 // Data model:
 //   weddingDrinkSettings/config    - one doc: event title + display options
@@ -25,13 +25,13 @@ service cloud.firestore {
 
     match /weddingDrinkSettings/{docId} {
       allow read: if true;
-      allow create, update: if request.resource.data.code == "YOUR_WEDDING_CODE";
+      allow create, update: if request.resource.data.code == "cheers2026";
       allow delete: if false;
     }
 
     match /weddingDrinkMenu/{itemId} {
       allow read: if true;
-      allow create, update: if request.resource.data.code == "YOUR_WEDDING_CODE"
+      allow create, update: if request.resource.data.code == "cheers2026"
                    && request.resource.data.name is string
                    && request.resource.data.name.size() > 0
                    && request.resource.data.volumeMl is number
