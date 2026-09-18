@@ -5,205 +5,203 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#722f37">
-<title>Cheers to Us! 🥂 Drink Tracker</title>
+<meta name="theme-color" content="#FFFAF5">
+<title>Andrew & Lydia · Drink Tracker</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥂</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amarante&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <style>
   :root{
-    --wine:#722f37;
-    --wine-dark:#4e1f26;
-    --blush:#e8b4bc;
-    --blush-light:#f6e3e6;
-    --gold:#c9a24b;
-    --cream:#fdf8f3;
-    --ink:#2c2420;
-    --muted:#8a7b74;
-    --white:#ffffff;
-    --danger:#b0413e;
-    --radius:16px;
-    --shadow:0 4px 18px rgba(114,47,55,0.12);
+    --taupe:#867060;
+    --taupe-dark:#5f4c3e;
+    --peach:#e9d5c5;
+    --peach-light:#f8efe7;
+    --accent:#b08a6b;
+    --cream:#FFFAF5;
+    --ink:#6b5748;
+    --muted:#9a8878;
+    --white:#fffdfb;
+    --danger:#a4574f;
+    --radius:4px;
+    --display:'Amarante',Georgia,serif;
+    --body:'Crimson Text',Georgia,serif;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    font-family:'Inter',system-ui,-apple-system,sans-serif;
-    background:linear-gradient(180deg,var(--cream) 0%,#fbf1e8 100%);
+    font-family:var(--body);
+    font-size:17px;
+    background:var(--cream);
     color:var(--ink);
     min-height:100vh;
     padding-bottom:84px;
     -webkit-tap-highlight-color:transparent;
   }
-  h1,h2,h3{font-family:'Playfair Display',Georgia,serif;margin:0;}
+  h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-transform:uppercase;color:var(--taupe);}
   .app-header{
-    background:linear-gradient(135deg,var(--wine) 0%,var(--wine-dark) 100%);
-    color:var(--white);
-    padding:28px 20px 22px;
     text-align:center;
-    border-radius:0 0 28px 28px;
-    box-shadow:var(--shadow);
+    padding:44px 20px 6px;
     position:relative;
   }
-  .app-header h1{font-size:1.7rem;line-height:1.25;}
-  .app-header .sub{color:var(--blush-light);font-size:.9rem;margin-top:6px;letter-spacing:.02em;}
-  .app-header .guest-chip{
-    margin-top:14px;display:inline-flex;align-items:center;gap:8px;
-    background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.25);
-    padding:6px 14px;border-radius:999px;font-size:.85rem;cursor:pointer;
+  .app-header h1{font-size:2rem;line-height:1.2;letter-spacing:5px;}
+  .app-header .dateline{
+    margin-top:14px;font-size:.85rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--taupe);
   }
-  main{max-width:520px;margin:0 auto;padding:18px 16px 8px;}
+  .app-header .sub{color:var(--muted);font-size:1rem;margin-top:8px;font-style:italic;}
+  .app-header .guest-chip{
+    margin-top:18px;display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--peach);background:var(--white);color:var(--taupe);
+    padding:6px 18px;border-radius:999px;font-size:.98rem;font-style:italic;cursor:pointer;
+  }
+  .app-header .guest-chip::before{content:"Drinking as";font-style:normal;font-size:.72rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+  .divider{width:56px;height:1px;background:var(--accent);margin:22px auto 0;opacity:.7;}
+  main{max-width:520px;margin:0 auto;padding:22px 16px 8px;}
   .card{
     background:var(--white);
+    border:1px solid var(--peach);
     border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    padding:18px;
-    margin-bottom:16px;
+    padding:22px 18px;
+    margin-bottom:18px;
   }
-  .section-title{font-size:1.15rem;color:var(--wine-dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .section-title{font-size:1.05rem;letter-spacing:3px;color:var(--taupe);margin-bottom:16px;text-align:center;}
   /* Name gate */
   #nameGate{
-    position:fixed;inset:0;background:linear-gradient(160deg,var(--wine) 0%,var(--wine-dark) 100%);
+    position:fixed;inset:0;background:var(--cream);
     display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;
   }
-  #nameGate .box{background:var(--white);border-radius:20px;padding:28px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);}
-  #nameGate .box .emoji{font-size:2.6rem;margin-bottom:6px;}
-  #nameGate .box h1{font-size:1.4rem;color:var(--wine-dark);margin-bottom:4px;}
-  #nameGate .box p{color:var(--muted);font-size:.9rem;margin:0 0 18px;}
+  #nameGate .box{background:var(--white);border:1px solid var(--peach);border-radius:var(--radius);padding:34px 26px;max-width:380px;width:100%;text-align:center;}
+  #nameGate .box .eyebrow{font-size:.85rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  #nameGate .box h1{font-size:1.5rem;letter-spacing:3px;color:var(--taupe);margin-bottom:8px;}
+  #nameGate .box p{color:var(--muted);font-style:italic;font-size:1rem;margin:0 0 20px;}
   input[type=text],input[type=number],input[type=password],select{
-    width:100%;padding:13px 14px;border:1.5px solid #e7d9d3;border-radius:12px;
-    font-size:1rem;font-family:inherit;background:var(--cream);color:var(--ink);
+    width:100%;padding:12px 14px;border:1px solid var(--peach);border-radius:3px;
+    font-size:1.05rem;font-family:var(--body);background:#fff;color:var(--ink);
   }
-  input:focus,select:focus{outline:none;border-color:var(--gold);}
-  button{font-family:inherit;cursor:pointer;border:none;}
+  input:focus,select:focus{outline:none;border-color:var(--taupe);}
+  button{font-family:var(--body);cursor:pointer;border:none;}
   .btn-primary{
-    background:var(--wine);color:var(--white);padding:13px 18px;border-radius:12px;
-    font-weight:600;font-size:1rem;width:100%;margin-top:12px;transition:transform .1s,background .15s;
+    background:var(--taupe);color:var(--cream);padding:14px 18px;border-radius:3px;
+    font-family:var(--display);text-transform:uppercase;letter-spacing:2px;
+    font-size:.85rem;width:100%;margin-top:14px;transition:transform .1s,background .15s;
   }
-  .btn-primary:active{transform:scale(0.98);background:var(--wine-dark);}
+  .btn-primary:active{transform:scale(0.99);background:var(--taupe-dark);}
   .btn-secondary{
-    background:var(--blush-light);color:var(--wine-dark);padding:10px 16px;border-radius:10px;
-    font-weight:600;font-size:.88rem;
+    background:transparent;color:var(--taupe);border:1px solid var(--taupe);padding:10px 16px;border-radius:3px;
+    font-family:var(--display);text-transform:uppercase;letter-spacing:1.5px;font-size:.75rem;
   }
-  .btn-ghost{background:transparent;color:var(--muted);font-size:.82rem;text-decoration:underline;padding:6px;}
+  .btn-ghost{background:transparent;color:var(--muted);font-size:1rem;font-style:italic;text-decoration:underline;padding:6px;}
   .btn-danger{
-    background:#fdecea;color:var(--danger);border:1.5px solid #f3c6c1;padding:12px 16px;border-radius:12px;
-    font-weight:700;font-size:.9rem;width:100%;
+    background:transparent;color:var(--danger);border:1px solid var(--danger);padding:12px 16px;border-radius:3px;
+    font-family:var(--display);text-transform:uppercase;letter-spacing:1.5px;font-size:.78rem;width:100%;
   }
-  .btn-danger:active{background:#f9d9d6;}
+  .btn-danger:active{background:#f7e9e7;}
   /* Tabs */
   nav.bottom-nav{
-    position:fixed;bottom:0;left:0;right:0;background:var(--white);
-    border-top:1px solid #f0e4de;display:flex;justify-content:space-around;
-    padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:50;
-    box-shadow:0 -4px 16px rgba(0,0,0,0.06);
+    position:fixed;bottom:0;left:0;right:0;background:var(--cream);
+    border-top:1px solid var(--peach);display:flex;justify-content:space-around;
+    padding:10px 4px calc(10px + env(safe-area-inset-bottom));z-index:50;
   }
   nav.bottom-nav button{
-    background:none;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
-    color:var(--muted);font-size:.68rem;font-weight:600;padding:6px 2px;border-radius:10px;
+    background:none;flex:1;color:var(--muted);font-size:1.05rem;font-style:italic;padding:8px 2px;letter-spacing:.5px;
   }
-  nav.bottom-nav button .ic{font-size:1.3rem;}
-  nav.bottom-nav button.active{color:var(--wine);background:var(--blush-light);}
+  nav.bottom-nav button.active{color:var(--taupe-dark);text-decoration:underline;text-underline-offset:7px;text-decoration-thickness:1px;}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;animation:fadein .18s ease;}
   @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
   /* Drink grid */
   .drink-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .drink-btn{
-    background:var(--cream);border:1.5px solid #f0e4de;border-radius:14px;
-    padding:14px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;
+    background:var(--cream);border:1px solid var(--peach);border-radius:var(--radius);
+    padding:16px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink);
     transition:transform .08s,background .15s,border-color .15s;
   }
-  .drink-btn:active{transform:scale(0.95);background:var(--blush-light);border-color:var(--gold);}
-  .drink-btn .emoji{font-size:1.9rem;}
-  .drink-btn .name{font-weight:600;font-size:.87rem;line-height:1.2;}
-  .drink-btn .vol{font-size:.74rem;color:var(--muted);}
-  .empty-state{text-align:center;color:var(--muted);padding:30px 10px;font-size:.92rem;}
+  .drink-btn:active{transform:scale(0.97);background:var(--peach-light);border-color:var(--taupe);}
+  .drink-btn .emoji{font-size:1.7rem;}
+  .drink-btn .name{font-weight:600;font-size:1.05rem;line-height:1.2;color:var(--taupe-dark);}
+  .drink-btn .vol{font-size:.9rem;color:var(--muted);font-style:italic;}
+  .empty-state{text-align:center;color:var(--muted);font-style:italic;padding:30px 10px;font-size:1rem;}
   .cooldown-banner{
-    background:var(--blush-light);color:var(--wine-dark);border:1px solid var(--blush);
-    border-radius:10px;padding:10px 12px;font-size:.85rem;font-weight:600;
+    background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);
+    border-radius:3px;padding:10px 12px;font-size:.98rem;font-style:italic;
     margin-bottom:14px;text-align:center;display:none;
   }
   .cooldown-banner.show{display:block;}
   .drink-grid.cooling-down .drink-btn{opacity:.4;pointer-events:none;}
   /* Me tab */
   .stat-hero{text-align:center;padding:10px 0 4px;}
-  .stat-hero .big{font-family:'Playfair Display',serif;font-size:2.6rem;color:var(--wine);font-weight:700;line-height:1;}
-  .stat-hero .unit{font-size:1rem;color:var(--muted);margin-top:2px;}
-  .stat-hero .sub{font-size:.8rem;color:var(--muted);margin-top:8px;}
-  .stat-row{display:flex;gap:10px;margin-top:14px;}
-  .stat-box{flex:1;background:var(--blush-light);border-radius:12px;padding:12px;text-align:center;}
-  .stat-box .n{font-size:1.3rem;font-weight:700;color:var(--wine-dark);}
-  .stat-box .l{font-size:.72rem;color:var(--muted);margin-top:2px;}
-  .log-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f4ece7;}
+  .stat-hero .big{font-family:var(--display);font-size:3rem;color:var(--taupe);line-height:1;letter-spacing:2px;}
+  .stat-hero .unit{font-size:.9rem;color:var(--muted);margin-top:6px;letter-spacing:2px;text-transform:uppercase;}
+  .stat-hero .sub{font-size:.98rem;color:var(--muted);margin-top:10px;font-style:italic;}
+  .stat-row{display:flex;gap:10px;margin-top:16px;}
+  .stat-box{flex:1;background:var(--peach-light);border:1px solid var(--peach);border-radius:var(--radius);padding:12px;text-align:center;}
+  .stat-box .n{font-family:var(--display);font-size:1.4rem;color:var(--taupe);letter-spacing:1px;}
+  .stat-box .l{font-size:.85rem;color:var(--muted);margin-top:2px;font-style:italic;}
+  .log-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--peach-light);}
   .log-row:last-child{border-bottom:none;}
   .log-row .li{display:flex;align-items:center;gap:10px;}
   .log-row .li .emoji{font-size:1.3rem;}
   .log-row .li .meta{display:flex;flex-direction:column;}
-  .log-row .li .meta .n{font-weight:600;font-size:.9rem;}
-  .log-row .li .meta .t{font-size:.72rem;color:var(--muted);}
+  .log-row .li .meta .n{font-weight:600;font-size:1.05rem;color:var(--taupe-dark);}
+  .log-row .li .meta .t{font-size:.85rem;color:var(--muted);font-style:italic;}
   .log-row.voided{opacity:.45;}
   .log-row.voided .li .meta .n{text-decoration:line-through;}
   /* Leaderboard */
-  .lb-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f4ece7;}
+  .lb-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--peach-light);}
   .lb-row:last-child{border-bottom:none;}
-  .lb-row.me{background:var(--blush-light);border-radius:10px;padding-left:10px;padding-right:10px;}
-  .lb-rank{width:28px;text-align:center;font-weight:700;color:var(--muted);font-size:.95rem;}
-  .lb-rank.top1{font-size:1.3rem;}
-  .lb-rank.top2{font-size:1.15rem;}
-  .lb-rank.top3{font-size:1.05rem;}
-  .lb-name{flex:1;font-weight:600;font-size:.94rem;}
-  .lb-name .you-tag{font-size:.68rem;color:var(--wine);font-weight:700;margin-left:6px;}
+  .lb-row.me{background:var(--peach-light);border-radius:var(--radius);padding-left:10px;padding-right:10px;}
+  .lb-rank{width:30px;text-align:center;font-family:var(--display);color:var(--muted);font-size:1rem;}
+  .lb-rank.top1,.lb-rank.top2,.lb-rank.top3{color:var(--taupe-dark);font-size:1.2rem;}
+  .lb-name{flex:1;font-weight:600;font-size:1.08rem;color:var(--taupe-dark);}
+  .lb-name .you-tag{font-size:.7rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-style:italic;font-weight:400;margin-left:8px;}
   .lb-vol{text-align:right;}
-  .lb-vol .n{font-weight:700;color:var(--wine-dark);}
-  .lb-vol .c{font-size:.7rem;color:var(--muted);}
+  .lb-vol .n{font-family:var(--display);color:var(--taupe);font-size:1rem;letter-spacing:.5px;}
+  .lb-vol .c{font-size:.85rem;color:var(--muted);font-style:italic;}
   /* Admin */
   .lock-box{text-align:center;padding:24px 10px;}
-  .lock-box .emoji{font-size:2.2rem;}
-  .menu-item-row{border:1px solid #f0e4de;border-radius:12px;padding:12px;margin-bottom:10px;}
+  .lock-box p{font-style:italic;}
+  .menu-item-row{border:1px solid var(--peach);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
   .menu-item-row.inactive{opacity:.5;}
   .mi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .mi-top .nm{font-weight:700;}
-  .guest-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #f0e4de;border-radius:12px;padding:10px 12px;margin-bottom:8px;}
+  .mi-top .nm{font-weight:600;font-size:1.08rem;color:var(--taupe-dark);}
+  .guest-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--peach);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;}
   .guest-row .gr-info{display:flex;flex-direction:column;min-width:0;}
-  .guest-row .gr-name{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .guest-row .gr-stats{font-size:.74rem;color:var(--muted);}
-  .guest-row .btn-ghost{color:var(--danger);text-decoration:none;font-weight:600;white-space:nowrap;}
-  .toggle{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);}
+  .guest-row .gr-name{font-weight:600;font-size:1.05rem;color:var(--taupe-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .guest-row .gr-stats{font-size:.88rem;color:var(--muted);font-style:italic;}
+  .guest-row .btn-ghost{color:var(--danger);white-space:nowrap;}
   .field-grid{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:8px;}
   .switch{position:relative;display:inline-block;width:38px;height:22px;flex:none;}
   .switch input{opacity:0;width:0;height:0;}
-  .slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:22px;transition:.2s;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:var(--peach);border-radius:22px;transition:.2s;}
   .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;}
-  input:checked + .slider{background:var(--wine);}
+  input:checked + .slider{background:var(--taupe);}
   input:checked + .slider:before{transform:translateX(16px);}
-  label.small{font-size:.72rem;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+  label.small{font-size:.8rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px;}
   /* Toast */
   #toast{
     position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);
-    background:var(--wine-dark);color:white;padding:12px 18px;border-radius:14px;
-    font-size:.88rem;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,0.25);
+    background:var(--taupe-dark);color:var(--cream);padding:12px 18px;border-radius:var(--radius);
+    font-size:1rem;display:flex;align-items:center;gap:14px;box-shadow:0 6px 20px rgba(60,40,30,0.25);
     opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200;max-width:90vw;
   }
   #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
-  #toast button{color:var(--gold);background:none;font-weight:700;font-size:.85rem;white-space:nowrap;}
-  .footer-note{text-align:center;color:var(--muted);font-size:.72rem;padding:14px 30px 6px;line-height:1.5;}
-  .conn-banner{background:#fff4e5;color:#8a5a00;border:1px solid #f2d9a0;border-radius:10px;padding:10px 12px;font-size:.8rem;margin-bottom:14px;display:none;}
+  #toast button{color:var(--peach);background:none;font-style:italic;text-decoration:underline;font-size:1rem;white-space:nowrap;}
+  .footer-note{text-align:center;color:var(--muted);font-style:italic;font-size:.9rem;padding:14px 30px 6px;line-height:1.5;}
+  .conn-banner{background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);border-radius:3px;padding:10px 12px;font-size:.95rem;font-style:italic;margin-bottom:14px;display:none;}
   .conn-banner.show{display:block;}
   .unit-toggle{display:flex;gap:6px;justify-content:center;margin:2px 0 16px;}
-  .unit-toggle button{padding:6px 14px;border-radius:999px;font-size:.78rem;font-weight:600;background:var(--blush-light);color:var(--wine-dark);}
-  .unit-toggle button.active{background:var(--wine);color:white;}
+  .unit-toggle button{padding:6px 16px;border-radius:999px;font-size:.8rem;font-family:var(--display);text-transform:uppercase;letter-spacing:1.5px;background:transparent;color:var(--taupe);border:1px solid var(--peach);}
+  .unit-toggle button.active{background:var(--taupe);color:var(--cream);border-color:var(--taupe);}
 </style>
 </head>
 <body>
 
 <div id="nameGate">
   <div class="box">
-    <div class="emoji">🥂</div>
+    <div class="eyebrow">November 7, 2026</div>
     <h1>Who's drinking?</h1>
     <p>Enter your name to start tracking your drinks tonight.</p>
     <input type="text" id="gateNameInput" placeholder="Your first name" maxlength="30" autocomplete="off">
@@ -213,20 +211,22 @@
 
 <div class="app-body" id="appBody">
   <header class="app-header">
-    <h1 id="eventTitle">Cheers to Us!</h1>
-    <div class="sub" id="eventSubtitle">Tap a drink each time you grab one 🍹</div>
-    <div class="guest-chip" id="guestChip" title="Tap to change your name">🙋 <span id="guestChipName">—</span></div>
+    <h1 id="eventTitle">Andrew &amp; Lydia</h1>
+    <div class="dateline">November 7, 2026<br>Clarkesville, Georgia</div>
+    <div class="sub" id="eventSubtitle">Tap a drink each time you grab one</div>
+    <div class="guest-chip" id="guestChip" title="Tap to change your name"><span id="guestChipName">—</span></div>
+    <div class="divider"></div>
   </header>
 
   <main>
-    <div class="conn-banner" id="connBanner">⚠️ Having trouble connecting — check your internet connection. Your drinks will sync once you're back online.</div>
+    <div class="conn-banner" id="connBanner">Having trouble connecting — check your internet connection. Your drinks will sync once you're back online.</div>
 
     <div id="tabs">
 
       <section class="tab-panel active" id="tab-drinks">
         <div class="card">
-          <div class="section-title">🍸 Curated Bar Menu</div>
-          <div class="cooldown-banner" id="cooldownBanner">⏳ Next drink unlocks in <span id="cooldownTime">0:00</span></div>
+          <div class="section-title">The Bar Menu</div>
+          <div class="cooldown-banner" id="cooldownBanner">Next drink unlocks in <span id="cooldownTime">0:00</span></div>
           <div class="drink-grid" id="menuGrid">
             <div class="empty-state">Loading the bar menu…</div>
           </div>
@@ -242,7 +242,7 @@
           <div class="stat-hero">
             <div class="big" id="myTotalBig">0</div>
             <div class="unit" id="myTotalUnit">fl oz consumed</div>
-            <div class="sub">Keep it fun, keep it safe 🚗</div>
+            <div class="sub">Keep it fun, keep it safe</div>
           </div>
           <div class="stat-row">
             <div class="stat-box"><div class="n" id="myDrinkCount">0</div><div class="l">Drinks logged</div></div>
@@ -250,14 +250,14 @@
           </div>
         </div>
         <div class="card">
-          <div class="section-title">📝 My Recent Drinks</div>
+          <div class="section-title">My Recent Drinks</div>
           <div id="myLog"><div class="empty-state">No drinks logged yet — head to the Drinks tab!</div></div>
         </div>
       </section>
 
       <section class="tab-panel" id="tab-leaderboard">
         <div class="card">
-          <div class="section-title">🏆 Leaderboard</div>
+          <div class="section-title">Leaderboard</div>
           <div id="leaderboardList"><div class="empty-state">No one's logged a drink yet…</div></div>
         </div>
       </section>
@@ -265,9 +265,8 @@
       <section class="tab-panel" id="tab-admin">
         <div class="card" id="adminLockCard">
           <div class="lock-box">
-            <div class="emoji">🔒</div>
             <h3>Admin access</h3>
-            <p style="color:var(--muted);font-size:.85rem;margin:8px 0 16px;">Enter the wedding passcode to curate the bar menu and event settings.</p>
+            <p style="color:var(--muted);font-size:1rem;margin:10px 0 16px;">Enter the wedding passcode to curate the bar menu and event settings.</p>
             <input type="password" id="adminCodeInput" placeholder="Passcode">
             <button class="btn-primary" id="adminUnlockBtn">Unlock admin</button>
           </div>
@@ -275,16 +274,16 @@
 
         <div id="adminPanels" style="display:none;">
           <div class="card">
-            <div class="section-title">🎉 Event Settings</div>
+            <div class="section-title">Event Settings</div>
             <label class="small">Event title</label>
-            <input type="text" id="settingsTitle" placeholder="Cheers to Us!" style="margin-bottom:10px;">
+            <input type="text" id="settingsTitle" placeholder="Andrew &amp; Lydia" style="margin-bottom:10px;">
             <label class="small">Subtitle</label>
-            <input type="text" id="settingsSubtitle" placeholder="Tap a drink each time you grab one 🍹">
+            <input type="text" id="settingsSubtitle" placeholder="Tap a drink each time you grab one">
             <button class="btn-primary" id="saveSettingsBtn">Save settings</button>
           </div>
 
           <div class="card">
-            <div class="section-title">➕ Add a Drink</div>
+            <div class="section-title">Add a Drink</div>
             <label class="small">Name</label>
             <input type="text" id="newItemName" placeholder="e.g. Old Fashioned" style="margin-bottom:8px;">
             <div class="field-grid">
@@ -310,14 +309,14 @@
           </div>
 
           <div class="card">
-            <div class="section-title">📋 Manage Menu</div>
-            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">✨ Load starter menu (12 drinks)</button>
+            <div class="section-title">Manage Menu</div>
+            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (12 drinks)</button>
             <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
           </div>
 
           <div class="card">
-            <div class="section-title">🧑‍🤝‍🧑 Manage Guests</div>
-            <button class="btn-danger" id="purgeAllBtn" style="margin-bottom:14px;">🧨 Purge ALL guests &amp; drinks</button>
+            <div class="section-title">Manage Guests</div>
+            <button class="btn-danger" id="purgeAllBtn" style="margin-bottom:14px;">Purge all guests &amp; drinks</button>
             <div id="adminGuestList"><div class="empty-state">No guests yet.</div></div>
           </div>
         </div>
@@ -327,13 +326,13 @@
   </main>
 
   <nav class="bottom-nav">
-    <button data-tab="drinks" class="active"><span class="ic">🍹</span>Drinks</button>
-    <button data-tab="me"><span class="ic">📊</span>Me</button>
-    <button data-tab="leaderboard"><span class="ic">🏆</span>Board</button>
-    <button data-tab="admin"><span class="ic">⚙️</span>Admin</button>
+    <button data-tab="drinks" class="active">Drinks</button>
+    <button data-tab="me">My Stats</button>
+    <button data-tab="leaderboard">Leaderboard</button>
+    <button data-tab="admin">Admin</button>
   </nav>
 
-  <div class="footer-note">Made with 🥂 for our wedding · Please drink responsibly and look out for each other.</div>
+  <div class="footer-note">Please drink responsibly and look out for each other.</div>
 </div>
 
 <div id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
@@ -503,7 +502,7 @@
   // ==========================================================
   // Settings
   // ==========================================================
-  var currentSettings = { title:"Cheers to Us!", subtitle:"Tap a drink each time you grab one 🍹" };
+  var currentSettings = { title:"Andrew & Lydia", subtitle:"Tap a drink each time you grab one" };
   if(firebaseReady){
     db.collection("weddingDrinkSettings").doc("config").onSnapshot(function(doc){
       if(doc.exists){
@@ -755,7 +754,7 @@
       box.innerHTML = '<div class="empty-state">No one\'s logged a drink yet…</div>';
       return;
     }
-    var medals = ["🥇","🥈","🥉"];
+    var medals = [];
     box.innerHTML = withDrinks.map(function(g, i){
       var isMe = g.id === guestId;
       var rankDisplay = medals[i] || ("#" + (i+1));
@@ -791,7 +790,7 @@
 
   $("saveSettingsBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
-    var title = $("settingsTitle").value.trim() || "Cheers to Us!";
+    var title = $("settingsTitle").value.trim() || "Andrew & Lydia";
     var subtitle = $("settingsSubtitle").value.trim();
     db.collection("weddingDrinkSettings").doc("config").set({
       title: title,

@@ -1,4 +1,4 @@
-# 🥂 Cheers to Us! — Wedding Drink Tracker
+# Andrew & Lydia — Wedding Drink Tracker
 
 A mobile-friendly web app for wedding guests to log the drinks they grab from
 your curated bar menu, see their own total liquid volume consumed, and check
@@ -15,8 +15,9 @@ website guests open on their phone.
   live countdown until the next one unlocks. Undoing a mis-tap clears it
   immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
-- **Leaderboard** — everyone's total liquid volume, ranked live, with medals
-  for the top 3.
+- **Leaderboard** — everyone's total liquid volume, ranked live.
+- **Matches the wedding website** — cream and taupe palette, Amarante
+  headings, and Crimson Text body copy, to look like part of the same site.
 - **Admin tab** — passcode-gated menu, event-title, and guest management,
   right from a phone. No app install or deploy step needed to curate the bar.
 - **Purge / remove guests** — wipe the whole leaderboard before the big day,
