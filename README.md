@@ -99,4 +99,12 @@ with your passcode can edit the bar menu or event title. Firestore security
 rules (`firestore.rules`) enforce that split server-side. Don't reuse a
 sensitive passcode here — it's visible to anyone who views the page source.
 
+A guest's identity is a random ID generated once per device and stored in
+that browser's local storage — it is *not* derived from the name they type.
+Renaming yourself (fixing a typo, or trying to dodge the drink cooldown or
+start the leaderboard over) just relabels your existing record; it doesn't
+create a fresh one. The only way to actually get a clean slate on the same
+device is clearing that browser's site data, which is a real enough hurdle
+to stop casual cooldown-dodging without adding any login.
+
 Please drink responsibly, and look out for each other. 🥂

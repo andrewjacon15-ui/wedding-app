@@ -379,6 +379,10 @@
       .replace(/[^a-z0-9]+/g,"-")
       .replace(/^-+|-+$/g,"") || "guest";
   }
+  function generateGuestId(){
+    if(window.crypto && crypto.randomUUID){ return crypto.randomUUID(); }
+    return "g-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+  }
   function escapeHtml(s){
     return String(s||"").replace(/[&<>"']/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
@@ -403,13 +407,27 @@
   }
 
   // ---- Guest identity ----
+  // guestId is a random ID generated once per device and persisted in
+  // localStorage -- it is NOT derived from the name, so renaming yourself
+  // (fixing a typo, or trying to dodge the drink cooldown / start the
+  // leaderboard over) relabels your existing record instead of creating a
+  // fresh one. Guests who used the app before this change get migrated to a
+  // stable ID matching their old name-derived one, so their history carries
+  // over exactly once, seamlessly.
   var guestName = localStorage.getItem("wdt_guest_name") || "";
-  var guestId = guestName ? slugify(guestName) : "";
+  var guestId = localStorage.getItem("wdt_guest_id") || "";
+  if(!guestId && guestName){
+    guestId = slugify(guestName);
+    localStorage.setItem("wdt_guest_id", guestId);
+  }
   var unitMode = localStorage.getItem("wdt_unit") || "oz";
 
   function setGuestName(name){
     guestName = name.trim();
-    guestId = slugify(guestName);
+    if(!guestId){
+      guestId = generateGuestId();
+      localStorage.setItem("wdt_guest_id", guestId);
+    }
     localStorage.setItem("wdt_guest_name", guestName);
     $("guestChipName").textContent = guestName;
     ensureGuestDoc();
@@ -544,6 +562,13 @@
           nameLower: guestName.toLowerCase(),
           totalMl: 0,
           drinkCount: 0,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true}).catch(function(e){ console.error(e); });
+      }else if(doc.data().name !== guestName){
+        // Renaming relabels this same record -- totals/history are untouched.
+        ref.set({
+          name: guestName,
+          nameLower: guestName.toLowerCase(),
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, {merge:true}).catch(function(e){ console.error(e); });
       }
