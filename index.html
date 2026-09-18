@@ -590,7 +590,30 @@
     /^fa+g+h?(?:o+t|i+t|y|ie)?s?$/g,
     /^reta+rd(?:ed|s)?$/g,
     /^tra+nn+(?:y|ie)s?$/g,
-    /^ch+i+nk+s?$/g, /^ki+ke+s?$/g
+    /^ch+i+nk+s?$/g, /^ki+ke+s?$/g,
+    // Sexual innuendo
+    /^mo+to+rboa+t/g,                                // motorboat, motorboating
+    /^glu+ck+$/g,                                    // gluck gluck
+    /^hor+ny$/g, /^orgasm/g, /^orgy$/g, /^orgies$/g, /gangbang/g, /^(?:three|four)some$/g,
+    /bukkake/g, /creampie/g, /deepthroat/g, /^rimjob/g,
+    /^titt?(?:s|ies)$/g, /^boo+b(?:s|ies)$/g,        // tits, titties, boobs, boobies
+    /^penis(?:es)?$/g, /^vagina/g, /^schlong/g, /^hooker/g,
+    /^se+x(?:y|ual|ting|ist)?$/g,                    // sex, sexy (whole word, so Sussex/Essex are safe)
+    /^(?:dtf|milf|bdsm)$/g,
+    // Drug references (Coke, molly and pot are left alone: rum and coke, Molly, pot roast)
+    /coca+ine/g, /freeba+se/g, /^he+ro+i+ns?$/g,     // heroin (not heroine)
+    /^me+th(?:s|amphetamines?)?$/g,                  // meth (not method)
+    /^(?:lsd|mdma|xanax|adderall|opium|marijuana)$/g,
+    /ketamine/g, /fentanyl/g, /oxycontin/g, /^wee+d$/g, /^shrooms?$/g, /^bong$/g, /^crackheads?$/g
+  ];
+  // Phrases where one word is only a problem next to another. Each capture group is masked.
+  var PHRASE_RULES = [
+    /\b(crack)(?=\s+(?:cocaine|coke|pipes?|rocks?|heads?|addicts?|dealers?))/gi,   // crack cocaine
+    /\b(suck)\s+(?:my|on|his|her|it|me|dick|cock)\b/gi,                            // suck my / suck it
+    /\b(suck)\s+(suck)\b/gi,                                                       // suck suck
+    /\b(sloppy)\s+(?:toppy|doppy|toppie|head)\b/gi,
+    /\b(blow)\s+me\b/gi,
+    /\b(jerk|jack|beat)(?:ing)?\s+off\b/gi
   ];
 
   function maskToken(tok){
@@ -633,8 +656,26 @@
     for(var j = 0; j < masked.length; j++){ if(masked.charAt(j) === "*") out[idx[j]] = "*"; }
     return out.join("");
   }
+  function maskWord(w){
+    var v = w.slice(1).search(/[aeiou]/i);
+    var i = v === -1 ? 1 : v + 1;
+    return w.slice(0, i) + "*" + w.slice(i + 1);
+  }
+  function applyPhraseRule(text, re){
+    return text.replace(re, function(){
+      var a = arguments, m = a[0], out = m, from = 0;
+      for(var g = 1; g < a.length - 2; g++){
+        if(typeof a[g] !== "string") continue;
+        var at = out.indexOf(a[g], from);
+        if(at >= 0){ out = out.slice(0, at) + maskWord(a[g]) + out.slice(at + a[g].length); from = at + a[g].length; }
+      }
+      return out;
+    });
+  }
   function censorProfanity(text){
-    var t = String(text == null ? "" : text).replace(/(?:^|\s)(?:[a-z][ ._-]){2,}[a-z](?=\s|$)/gi, maskSpacedLetters);
+    var t = String(text == null ? "" : text);
+    PHRASE_RULES.forEach(function(re){ t = applyPhraseRule(t, re); });
+    t = t.replace(/(?:^|\s)(?:[a-z][ ._-]){2,}[a-z](?=\s|$)/gi, maskSpacedLetters);
     return t.replace(/\S+/g, maskToken);
   }
 

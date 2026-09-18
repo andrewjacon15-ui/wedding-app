@@ -33,9 +33,11 @@ guests open on their phone.
   drink. Notes show in My Recent Drinks and in a "Notes from the Bar" feed on
   the Leaderboard tab; admins can hide any note. Swear words are masked but
   stay readable (`f*ck`, `sh*t`), including common workarounds (`fuq`, `sh1t`,
-  `a$$`, `f.u.c.k`, spaced-out letters). Notes telling someone to hurt themselves
+  `a$$`, `f.u.c.k`, spaced-out letters), plus sexual innuendo (`m*torboat`,
+  `s*x`) and drug references (`c*caine`, `w*ed`; Coke, method and heroine are
+  left alone). Notes telling someone to hurt themselves
   are dropped entirely (the drink still logs). It is a word filter, so it can't
-  catch innuendo; use Hide for anything it misses.
+  catch every innuendo; use Hide for anything it misses.
 - **Guest photos** — a Photos tab where anyone can snap or pick photos (up to
   10 at a time). Photos are shrunk on the phone and stored in Firestore, so
   no paid Storage plan is needed. Tap a photo to view it larger; admins can
