@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#722f37">
+<title>Cheers to Us! 🥂 Drink Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥂</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+  :root{
+    --wine:#722f37;
+    --wine-dark:#4e1f26;
+    --blush:#e8b4bc;
+    --blush-light:#f6e3e6;
+    --gold:#c9a24b;
+    --cream:#fdf8f3;
+    --ink:#2c2420;
+    --muted:#8a7b74;
+    --white:#ffffff;
+    --danger:#b0413e;
+    --radius:16px;
+    --shadow:0 4px 18px rgba(114,47,55,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:linear-gradient(180deg,var(--cream) 0%,#fbf1e8 100%);
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:84px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3{font-family:'Playfair Display',Georgia,serif;margin:0;}
+  .app-header{
+    background:linear-gradient(135deg,var(--wine) 0%,var(--wine-dark) 100%);
+    color:var(--white);
+    padding:28px 20px 22px;
+    text-align:center;
+    border-radius:0 0 28px 28px;
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .app-header h1{font-size:1.7rem;line-height:1.25;}
+  .app-header .sub{color:var(--blush-light);font-size:.9rem;margin-top:6px;letter-spacing:.02em;}
+  .app-header .guest-chip{
+    margin-top:14px;display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.25);
+    padding:6px 14px;border-radius:999px;font-size:.85rem;cursor:pointer;
+  }
+  main{max-width:520px;margin:0 auto;padding:18px 16px 8px;}
+  .card{
+    background:var(--white);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .section-title{font-size:1.15rem;color:var(--wine-dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  /* Name gate */
+  #nameGate{
+    position:fixed;inset:0;background:linear-gradient(160deg,var(--wine) 0%,var(--wine-dark) 100%);
+    display:flex;align-items:center;justify-content:center;padding:24px;z-index:100;
+  }
+  #nameGate .box{background:var(--white);border-radius:20px;padding:28px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);}
+  #nameGate .box .emoji{font-size:2.6rem;margin-bottom:6px;}
+  #nameGate .box h1{font-size:1.4rem;color:var(--wine-dark);margin-bottom:4px;}
+  #nameGate .box p{color:var(--muted);font-size:.9rem;margin:0 0 18px;}
+  input[type=text],input[type=number],input[type=password],select{
+    width:100%;padding:13px 14px;border:1.5px solid #e7d9d3;border-radius:12px;
+    font-size:1rem;font-family:inherit;background:var(--cream);color:var(--ink);
+  }
+  input:focus,select:focus{outline:none;border-color:var(--gold);}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn-primary{
+    background:var(--wine);color:var(--white);padding:13px 18px;border-radius:12px;
+    font-weight:600;font-size:1rem;width:100%;margin-top:12px;transition:transform .1s,background .15s;
+  }
+  .btn-primary:active{transform:scale(0.98);background:var(--wine-dark);}
+  .btn-secondary{
+    background:var(--blush-light);color:var(--wine-dark);padding:10px 16px;border-radius:10px;
+    font-weight:600;font-size:.88rem;
+  }
+  .btn-ghost{background:transparent;color:var(--muted);font-size:.82rem;text-decoration:underline;padding:6px;}
+  /* Tabs */
+  nav.bottom-nav{
+    position:fixed;bottom:0;left:0;right:0;background:var(--white);
+    border-top:1px solid #f0e4de;display:flex;justify-content:space-around;
+    padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:50;
+    box-shadow:0 -4px 16px rgba(0,0,0,0.06);
+  }
+  nav.bottom-nav button{
+    background:none;flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    color:var(--muted);font-size:.68rem;font-weight:600;padding:6px 2px;border-radius:10px;
+  }
+  nav.bottom-nav button .ic{font-size:1.3rem;}
+  nav.bottom-nav button.active{color:var(--wine);background:var(--blush-light);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:fadein .18s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  /* Drink grid */
+  .drink-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .drink-btn{
+    background:var(--cream);border:1.5px solid #f0e4de;border-radius:14px;
+    padding:14px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;
+    transition:transform .08s,background .15s,border-color .15s;
+  }
+  .drink-btn:active{transform:scale(0.95);background:var(--blush-light);border-color:var(--gold);}
+  .drink-btn .emoji{font-size:1.9rem;}
+  .drink-btn .name{font-weight:600;font-size:.87rem;line-height:1.2;}
+  .drink-btn .vol{font-size:.74rem;color:var(--muted);}
+  .empty-state{text-align:center;color:var(--muted);padding:30px 10px;font-size:.92rem;}
+  /* Me tab */
+  .stat-hero{text-align:center;padding:10px 0 4px;}
+  .stat-hero .big{font-family:'Playfair Display',serif;font-size:2.6rem;color:var(--wine);font-weight:700;line-height:1;}
+  .stat-hero .unit{font-size:1rem;color:var(--muted);margin-top:2px;}
+  .stat-hero .sub{font-size:.8rem;color:var(--muted);margin-top:8px;}
+  .stat-row{display:flex;gap:10px;margin-top:14px;}
+  .stat-box{flex:1;background:var(--blush-light);border-radius:12px;padding:12px;text-align:center;}
+  .stat-box .n{font-size:1.3rem;font-weight:700;color:var(--wine-dark);}
+  .stat-box .l{font-size:.72rem;color:var(--muted);margin-top:2px;}
+  .log-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f4ece7;}
+  .log-row:last-child{border-bottom:none;}
+  .log-row .li{display:flex;align-items:center;gap:10px;}
+  .log-row .li .emoji{font-size:1.3rem;}
+  .log-row .li .meta{display:flex;flex-direction:column;}
+  .log-row .li .meta .n{font-weight:600;font-size:.9rem;}
+  .log-row .li .meta .t{font-size:.72rem;color:var(--muted);}
+  .log-row.voided{opacity:.45;}
+  .log-row.voided .li .meta .n{text-decoration:line-through;}
+  /* Leaderboard */
+  .lb-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid #f4ece7;}
+  .lb-row:last-child{border-bottom:none;}
+  .lb-row.me{background:var(--blush-light);border-radius:10px;padding-left:10px;padding-right:10px;}
+  .lb-rank{width:28px;text-align:center;font-weight:700;color:var(--muted);font-size:.95rem;}
+  .lb-rank.top1{font-size:1.3rem;}
+  .lb-rank.top2{font-size:1.15rem;}
+  .lb-rank.top3{font-size:1.05rem;}
+  .lb-name{flex:1;font-weight:600;font-size:.94rem;}
+  .lb-name .you-tag{font-size:.68rem;color:var(--wine);font-weight:700;margin-left:6px;}
+  .lb-vol{text-align:right;}
+  .lb-vol .n{font-weight:700;color:var(--wine-dark);}
+  .lb-vol .c{font-size:.7rem;color:var(--muted);}
+  /* Admin */
+  .lock-box{text-align:center;padding:24px 10px;}
+  .lock-box .emoji{font-size:2.2rem;}
+  .menu-item-row{border:1px solid #f0e4de;border-radius:12px;padding:12px;margin-bottom:10px;}
+  .menu-item-row.inactive{opacity:.5;}
+  .mi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .mi-top .nm{font-weight:700;}
+  .toggle{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);}
+  .field-grid{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:8px;}
+  .switch{position:relative;display:inline-block;width:38px;height:22px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:22px;transition:.2s;}
+  .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;}
+  input:checked + .slider{background:var(--wine);}
+  input:checked + .slider:before{transform:translateX(16px);}
+  label.small{font-size:.72rem;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+  /* Toast */
+  #toast{
+    position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);
+    background:var(--wine-dark);color:white;padding:12px 18px;border-radius:14px;
+    font-size:.88rem;display:flex;align-items:center;gap:12px;box-shadow:0 6px 20px rgba(0,0,0,0.25);
+    opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200;max-width:90vw;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
+  #toast button{color:var(--gold);background:none;font-weight:700;font-size:.85rem;white-space:nowrap;}
+  .footer-note{text-align:center;color:var(--muted);font-size:.72rem;padding:14px 30px 6px;line-height:1.5;}
+  .conn-banner{background:#fff4e5;color:#8a5a00;border:1px solid #f2d9a0;border-radius:10px;padding:10px 12px;font-size:.8rem;margin-bottom:14px;display:none;}
+  .conn-banner.show{display:block;}
+  .unit-toggle{display:flex;gap:6px;justify-content:center;margin:2px 0 16px;}
+  .unit-toggle button{padding:6px 14px;border-radius:999px;font-size:.78rem;font-weight:600;background:var(--blush-light);color:var(--wine-dark);}
+  .unit-toggle button.active{background:var(--wine);color:white;}
+</style>
+</head>
+<body>
+
+<div id="nameGate">
+  <div class="box">
+    <div class="emoji">🥂</div>
+    <h1>Who's drinking?</h1>
+    <p>Enter your name to start tracking your drinks tonight.</p>
+    <input type="text" id="gateNameInput" placeholder="Your first name" maxlength="30" autocomplete="off">
+    <button class="btn-primary" id="gateSubmit">Let's go</button>
+  </div>
+</div>
+
+<div class="app-body" id="appBody">
+  <header class="app-header">
+    <h1 id="eventTitle">Cheers to Us!</h1>
+    <div class="sub" id="eventSubtitle">Tap a drink each time you grab one 🍹</div>
+    <div class="guest-chip" id="guestChip" title="Tap to change your name">🙋 <span id="guestChipName">—</span></div>
+  </header>
+
+  <main>
+    <div class="conn-banner" id="connBanner">⚠️ Having trouble connecting — check your internet connection. Your drinks will sync once you're back online.</div>
+
+    <div id="tabs">
+
+      <section class="tab-panel active" id="tab-drinks">
+        <div class="card">
+          <div class="section-title">🍸 Curated Bar Menu</div>
+          <div class="drink-grid" id="menuGrid">
+            <div class="empty-state">Loading the bar menu…</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-me">
+        <div class="card">
+          <div class="unit-toggle">
+            <button id="unitOz" class="active">fl oz</button>
+            <button id="unitMl">mL</button>
+          </div>
+          <div class="stat-hero">
+            <div class="big" id="myTotalBig">0</div>
+            <div class="unit" id="myTotalUnit">fl oz consumed</div>
+            <div class="sub">Keep it fun, keep it safe 🚗</div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="n" id="myDrinkCount">0</div><div class="l">Drinks logged</div></div>
+            <div class="stat-box"><div class="n" id="myRank">—</div><div class="l">Leaderboard rank</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">📝 My Recent Drinks</div>
+          <div id="myLog"><div class="empty-state">No drinks logged yet — head to the Drinks tab!</div></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-leaderboard">
+        <div class="card">
+          <div class="section-title">🏆 Leaderboard</div>
+          <div id="leaderboardList"><div class="empty-state">No one's logged a drink yet…</div></div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-admin">
+        <div class="card" id="adminLockCard">
+          <div class="lock-box">
+            <div class="emoji">🔒</div>
+            <h3>Admin access</h3>
+            <p style="color:var(--muted);font-size:.85rem;margin:8px 0 16px;">Enter the wedding passcode to curate the bar menu and event settings.</p>
+            <input type="password" id="adminCodeInput" placeholder="Passcode">
+            <button class="btn-primary" id="adminUnlockBtn">Unlock admin</button>
+          </div>
+        </div>
+
+        <div id="adminPanels" style="display:none;">
+          <div class="card">
+            <div class="section-title">🎉 Event Settings</div>
+            <label class="small">Event title</label>
+            <input type="text" id="settingsTitle" placeholder="Cheers to Us!" style="margin-bottom:10px;">
+            <label class="small">Subtitle</label>
+            <input type="text" id="settingsSubtitle" placeholder="Tap a drink each time you grab one 🍹">
+            <button class="btn-primary" id="saveSettingsBtn">Save settings</button>
+          </div>
+
+          <div class="card">
+            <div class="section-title">➕ Add a Drink</div>
+            <label class="small">Name</label>
+            <input type="text" id="newItemName" placeholder="e.g. Old Fashioned" style="margin-bottom:8px;">
+            <div class="field-grid">
+              <div>
+                <label class="small">Emoji</label>
+                <input type="text" id="newItemEmoji" placeholder="🥃" maxlength="4">
+              </div>
+              <div>
+                <label class="small">Size (fl oz)</label>
+                <input type="number" id="newItemOz" placeholder="1.5" step="0.25" min="0.25">
+              </div>
+            </div>
+            <label class="small">Category</label>
+            <select id="newItemCategory" style="margin-bottom:10px;">
+              <option>Cocktail</option>
+              <option>Beer</option>
+              <option>Wine</option>
+              <option>Champagne</option>
+              <option>Shot</option>
+              <option>Non-Alcoholic</option>
+            </select>
+            <button class="btn-primary" id="addItemBtn">Add to menu</button>
+          </div>
+
+          <div class="card">
+            <div class="section-title">📋 Manage Menu</div>
+            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">✨ Load starter menu (12 drinks)</button>
+            <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <button data-tab="drinks" class="active"><span class="ic">🍹</span>Drinks</button>
+    <button data-tab="me"><span class="ic">📊</span>Me</button>
+    <button data-tab="leaderboard"><span class="ic">🏆</span>Board</button>
+    <button data-tab="admin"><span class="ic">⚙️</span>Admin</button>
+  </nav>
+
+  <div class="footer-note">Made with 🥂 for our wedding · Please drink responsibly and look out for each other.</div>
+</div>
+
+<div id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var OZ_PER_ML = 1/29.5735;
+  var STARTER_MENU = [
+    {name:"Draft Beer", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"White Claw", emoji:"🥫", oz:12, category:"Beer"},
+    {name:"House Red", emoji:"🍷", oz:5, category:"Wine"},
+    {name:"House White", emoji:"🥂", oz:5, category:"Wine"},
+    {name:"Champagne Toast", emoji:"🍾", oz:4, category:"Champagne"},
+    {name:"Margarita", emoji:"🍹", oz:8, category:"Cocktail"},
+    {name:"Old Fashioned", emoji:"🥃", oz:4, category:"Cocktail"},
+    {name:"Moscow Mule", emoji:"🍸", oz:8, category:"Cocktail"},
+    {name:"Espresso Martini", emoji:"☕", oz:4, category:"Cocktail"},
+    {name:"Tequila Shot", emoji:"🥃", oz:1.5, category:"Shot"},
+    {name:"Water", emoji:"💧", oz:12, category:"Non-Alcoholic"},
+    {name:"Mocktail", emoji:"🍓", oz:8, category:"Non-Alcoholic"}
+  ];
+
+  var db = null;
+  var firebaseReady = false;
+  try{
+    if(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey){
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      db = firebase.firestore();
+      firebaseReady = true;
+    }
+  }catch(e){ console.error("Firebase init failed", e); }
+
+  var WEDDING_CODE = window.WEDDING_CODE || "";
+
+  function $(id){ return document.getElementById(id); }
+  function mlToOz(ml){ return ml * OZ_PER_ML; }
+  function ozToMl(oz){ return oz / OZ_PER_ML; }
+  function slugify(name){
+    return (name||"").toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g,"-")
+      .replace(/^-+|-+$/g,"") || "guest";
+  }
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function fmtNum(n, decimals){
+    return Number(n).toFixed(decimals==null?1:decimals).replace(/\.0$/,"");
+  }
+  function timeAgo(date){
+    if(!date) return "just now";
+    var s = Math.floor((Date.now() - date.getTime())/1000);
+    if(s < 60) return "just now";
+    if(s < 3600) return Math.floor(s/60) + "m ago";
+    if(s < 86400) return Math.floor(s/3600) + "h ago";
+    return Math.floor(s/86400) + "d ago";
+  }
+
+  // ---- Guest identity ----
+  var guestName = localStorage.getItem("wdt_guest_name") || "";
+  var guestId = guestName ? slugify(guestName) : "";
+  var unitMode = localStorage.getItem("wdt_unit") || "oz";
+
+  function setGuestName(name){
+    guestName = name.trim();
+    guestId = slugify(guestName);
+    localStorage.setItem("wdt_guest_name", guestName);
+    $("guestChipName").textContent = guestName;
+    ensureGuestDoc();
+  }
+
+  $("gateSubmit").addEventListener("click", submitGate);
+  $("gateNameInput").addEventListener("keydown", function(e){ if(e.key==="Enter") submitGate(); });
+  function submitGate(){
+    var v = $("gateNameInput").value.trim();
+    if(!v){ $("gateNameInput").focus(); return; }
+    setGuestName(v);
+    $("nameGate").style.display = "none";
+    document.getElementById("appBody").classList.add("ready");
+  }
+  $("guestChip").addEventListener("click", function(){
+    var v = prompt("Update your name:", guestName);
+    if(v && v.trim()) setGuestName(v.trim());
+  });
+
+  if(guestName){
+    $("guestChipName").textContent = guestName;
+    $("nameGate").style.display = "none";
+    document.getElementById("appBody").classList.add("ready");
+  }else{
+    document.getElementById("appBody").classList.add("ready");
+  }
+
+  // ---- Tabs ----
+  var navButtons = document.querySelectorAll("nav.bottom-nav button");
+  navButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      navButtons.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
+      $("tab-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ---- Unit toggle ----
+  function applyUnitUI(){
+    $("unitOz").classList.toggle("active", unitMode==="oz");
+    $("unitMl").classList.toggle("active", unitMode==="ml");
+    renderMyStats();
+  }
+  $("unitOz").addEventListener("click", function(){ unitMode="oz"; localStorage.setItem("wdt_unit","oz"); applyUnitUI(); });
+  $("unitMl").addEventListener("click", function(){ unitMode="ml"; localStorage.setItem("wdt_unit","ml"); applyUnitUI(); });
+
+  // ---- Toast ----
+  var toastTimer = null;
+  function showToast(msg, undoFn){
+    $("toastMsg").textContent = msg;
+    var undoBtn = $("toastUndo");
+    undoBtn.style.display = undoFn ? "inline-block" : "none";
+    undoBtn.onclick = function(){ if(undoFn) undoFn(); hideToast(); };
+    $("toast").classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, 4500);
+  }
+  function hideToast(){ $("toast").classList.remove("show"); }
+
+  if(!firebaseReady){
+    showToast("Setup issue: Firebase isn't configured. Check firebase-config.js.");
+  }
+
+  // ---- Connection banner ----
+  var connBanner = $("connBanner");
+  var pendingWrites = 0;
+  function markWriteStart(){ pendingWrites++; }
+  function markWriteError(){ connBanner.classList.add("show"); }
+  function markWriteOk(){ connBanner.classList.remove("show"); }
+
+  // ==========================================================
+  // Settings
+  // ==========================================================
+  var currentSettings = { title:"Cheers to Us!", subtitle:"Tap a drink each time you grab one 🍹" };
+  if(firebaseReady){
+    db.collection("weddingDrinkSettings").doc("config").onSnapshot(function(doc){
+      if(doc.exists){
+        var d = doc.data();
+        if(d.title) $("eventTitle").textContent = d.title;
+        if(d.subtitle) $("eventSubtitle").textContent = d.subtitle;
+        $("settingsTitle").value = d.title || "";
+        $("settingsSubtitle").value = d.subtitle || "";
+      }
+    }, function(err){ console.error(err); markWriteError(); });
+  }
+
+  // ==========================================================
+  // Menu (drinks tab + admin list)
+  // ==========================================================
+  var menuItems = [];
+  if(firebaseReady){
+    db.collection("weddingDrinkMenu").orderBy("order","asc").onSnapshot(function(snap){
+      menuItems = [];
+      snap.forEach(function(doc){ menuItems.push(Object.assign({id:doc.id}, doc.data())); });
+      renderMenuGrid();
+      renderAdminMenuList();
+      markWriteOk();
+    }, function(err){ console.error(err); markWriteError(); });
+  }
+
+  function renderMenuGrid(){
+    var active = menuItems.filter(function(m){ return m.active !== false; });
+    var grid = $("menuGrid");
+    if(!active.length){
+      grid.innerHTML = '<div class="empty-state">The bar menu is empty. Ask an admin to add some drinks! 🍸</div>';
+      return;
+    }
+    grid.innerHTML = active.map(function(m){
+      return '<button class="drink-btn" data-item="'+m.id+'">'+
+        '<span class="emoji">'+escapeHtml(m.emoji||'🥂')+'</span>'+
+        '<span class="name">'+escapeHtml(m.name)+'</span>'+
+        '<span class="vol">'+fmtNum(mlToOz(m.volumeMl))+' oz</span>'+
+        '</button>';
+    }).join("");
+    grid.querySelectorAll(".drink-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){ logDrink(btn.dataset.item); });
+    });
+  }
+
+  // ==========================================================
+  // Logging a drink
+  // ==========================================================
+  function ensureGuestDoc(){
+    if(!firebaseReady || !guestId) return;
+    var ref = db.collection("weddingDrinkGuests").doc(guestId);
+    ref.get().then(function(doc){
+      if(!doc.exists){
+        ref.set({
+          name: guestName,
+          nameLower: guestName.toLowerCase(),
+          totalMl: 0,
+          drinkCount: 0,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, {merge:true}).catch(function(e){ console.error(e); });
+      }
+    }).catch(function(e){ console.error(e); });
+  }
+  ensureGuestDoc();
+
+  function logDrink(itemId){
+    if(!firebaseReady){ showToast("Can't log — Firebase isn't set up."); return; }
+    if(!guestId){ $("nameGate").style.display = "flex"; return; }
+    var item = menuItems.find(function(m){ return m.id === itemId; });
+    if(!item) return;
+
+    var batch = db.batch();
+    var logRef = db.collection("weddingDrinkLog").doc();
+    batch.set(logRef, {
+      guestId: guestId,
+      guestName: guestName,
+      itemId: item.id,
+      itemName: item.name,
+      emoji: item.emoji || "🥂",
+      category: item.category || "Drink",
+      volumeMl: item.volumeMl,
+      voided: false,
+      loggedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    var guestRef = db.collection("weddingDrinkGuests").doc(guestId);
+    batch.set(guestRef, {
+      name: guestName,
+      nameLower: guestName.toLowerCase(),
+      totalMl: firebase.firestore.FieldValue.increment(item.volumeMl),
+      drinkCount: firebase.firestore.FieldValue.increment(1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+
+    markWriteStart();
+    batch.commit().then(function(){
+      markWriteOk();
+      showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)", function(){
+        undoLog(logRef.id, item.volumeMl);
+      });
+    }).catch(function(e){
+      console.error(e);
+      markWriteError();
+      showToast("Couldn't log that drink — check your connection.");
+    });
+  }
+
+  function undoLog(logId, volumeMl){
+    if(!firebaseReady) return;
+    var batch = db.batch();
+    batch.update(db.collection("weddingDrinkLog").doc(logId), { voided: true });
+    batch.set(db.collection("weddingDrinkGuests").doc(guestId), {
+      name: guestName,
+      nameLower: guestName.toLowerCase(),
+      totalMl: firebase.firestore.FieldValue.increment(-volumeMl),
+      drinkCount: firebase.firestore.FieldValue.increment(-1),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    batch.commit().then(function(){
+      showToast("Drink removed.");
+    }).catch(function(e){ console.error(e); showToast("Couldn't undo — check your connection."); });
+  }
+
+  // ==========================================================
+  // Me tab
+  // ==========================================================
+  var myLogEntries = [];
+  var myGuestDoc = null;
+  var allGuests = [];
+
+  if(firebaseReady){
+    db.collection("weddingDrinkGuests").onSnapshot(function(snap){
+      allGuests = [];
+      snap.forEach(function(doc){ allGuests.push(Object.assign({id:doc.id}, doc.data())); });
+      allGuests.sort(function(a,b){ return (b.totalMl||0) - (a.totalMl||0); });
+      myGuestDoc = allGuests.find(function(g){ return g.id === guestId; }) || null;
+      renderMyStats();
+      renderLeaderboard();
+    }, function(err){ console.error(err); markWriteError(); });
+  }
+
+  function watchMyLog(){
+    if(!firebaseReady || !guestId) return;
+    db.collection("weddingDrinkLog").where("guestId","==",guestId).onSnapshot(function(snap){
+      myLogEntries = [];
+      snap.forEach(function(doc){ myLogEntries.push(Object.assign({id:doc.id}, doc.data())); });
+      myLogEntries.sort(function(a,b){
+        var ta = a.loggedAt ? a.loggedAt.toMillis() : 0;
+        var tb = b.loggedAt ? b.loggedAt.toMillis() : 0;
+        return tb - ta;
+      });
+      renderMyLog();
+    }, function(err){ console.error(err); });
+  }
+  watchMyLog();
+
+  function renderMyStats(){
+    var totalMl = myGuestDoc ? (myGuestDoc.totalMl||0) : 0;
+    var count = myGuestDoc ? (myGuestDoc.drinkCount||0) : 0;
+    if(unitMode==="oz"){
+      $("myTotalBig").textContent = fmtNum(mlToOz(totalMl));
+      $("myTotalUnit").textContent = "fl oz consumed";
+    }else{
+      $("myTotalBig").textContent = fmtNum(totalMl, 0);
+      $("myTotalUnit").textContent = "mL consumed";
+    }
+    $("myDrinkCount").textContent = count;
+    var rankIdx = allGuests.findIndex(function(g){ return g.id === guestId; });
+    $("myRank").textContent = (rankIdx >= 0) ? ("#" + (rankIdx+1)) : "—";
+  }
+
+  function renderMyLog(){
+    var box = $("myLog");
+    if(!myLogEntries.length){
+      box.innerHTML = '<div class="empty-state">No drinks logged yet — head to the Drinks tab!</div>';
+      return;
+    }
+    box.innerHTML = myLogEntries.slice(0,20).map(function(l){
+      var when = l.loggedAt ? timeAgo(l.loggedAt.toDate()) : "just now";
+      return '<div class="log-row '+(l.voided?'voided':'')+'">'+
+        '<div class="li"><span class="emoji">'+escapeHtml(l.emoji||'🥂')+'</span>'+
+        '<span class="meta"><span class="n">'+escapeHtml(l.itemName)+'</span>'+
+        '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span></span></div>'+
+        (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'">Undo</button>')+
+        '</div>';
+    }).join("");
+    box.querySelectorAll("[data-undo]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        undoLog(btn.dataset.undo, parseFloat(btn.dataset.vol));
+      });
+    });
+  }
+
+  // ==========================================================
+  // Leaderboard
+  // ==========================================================
+  function renderLeaderboard(){
+    var box = $("leaderboardList");
+    var withDrinks = allGuests.filter(function(g){ return (g.drinkCount||0) > 0; });
+    if(!withDrinks.length){
+      box.innerHTML = '<div class="empty-state">No one\'s logged a drink yet…</div>';
+      return;
+    }
+    var medals = ["🥇","🥈","🥉"];
+    box.innerHTML = withDrinks.map(function(g, i){
+      var isMe = g.id === guestId;
+      var rankDisplay = medals[i] || ("#" + (i+1));
+      return '<div class="lb-row '+(isMe?'me':'')+'">'+
+        '<div class="lb-rank '+(i<3?'top'+(i+1):'')+'">'+rankDisplay+'</div>'+
+        '<div class="lb-name">'+escapeHtml(g.name)+(isMe?'<span class="you-tag">YOU</span>':'')+'</div>'+
+        '<div class="lb-vol"><div class="n">'+fmtNum(mlToOz(g.totalMl||0))+' oz</div>'+
+        '<div class="c">'+(g.drinkCount||0)+' drinks</div></div>'+
+        '</div>';
+    }).join("");
+  }
+
+  // ==========================================================
+  // Admin
+  // ==========================================================
+  var adminUnlocked = localStorage.getItem("wdt_admin_unlocked") === "1";
+  function refreshAdminGate(){
+    $("adminLockCard").style.display = adminUnlocked ? "none" : "block";
+    $("adminPanels").style.display = adminUnlocked ? "block" : "none";
+  }
+  refreshAdminGate();
+
+  $("adminUnlockBtn").addEventListener("click", function(){
+    var v = $("adminCodeInput").value;
+    if(v && v === WEDDING_CODE){
+      adminUnlocked = true;
+      localStorage.setItem("wdt_admin_unlocked","1");
+      refreshAdminGate();
+    }else{
+      showToast("Wrong passcode.");
+    }
+  });
+
+  $("saveSettingsBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    var title = $("settingsTitle").value.trim() || "Cheers to Us!";
+    var subtitle = $("settingsSubtitle").value.trim();
+    db.collection("weddingDrinkSettings").doc("config").set({
+      title: title,
+      subtitle: subtitle,
+      code: WEDDING_CODE
+    }, {merge:true}).then(function(){
+      showToast("Settings saved.");
+    }).catch(function(e){ console.error(e); showToast("Save failed — check your connection."); });
+  });
+
+  $("addItemBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    var name = $("newItemName").value.trim();
+    var emoji = $("newItemEmoji").value.trim() || "🥂";
+    var oz = parseFloat($("newItemOz").value);
+    var category = $("newItemCategory").value;
+    if(!name || !oz || oz <= 0){ showToast("Enter a name and a size in fl oz."); return; }
+    var order = menuItems.length ? Math.max.apply(null, menuItems.map(function(m){return m.order||0;})) + 1 : 0;
+    db.collection("weddingDrinkMenu").add({
+      name: name,
+      emoji: emoji,
+      volumeMl: Math.round(ozToMl(oz)),
+      category: category,
+      active: true,
+      order: order,
+      code: WEDDING_CODE
+    }).then(function(){
+      $("newItemName").value = ""; $("newItemEmoji").value = ""; $("newItemOz").value = "";
+      showToast("Added " + name + " to the menu.");
+    }).catch(function(e){ console.error(e); showToast("Couldn't add drink — check your connection."); });
+  });
+
+  $("seedMenuBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    if(menuItems.length > 0){
+      if(!confirm("The menu already has items. Add the 12 starter drinks anyway?")) return;
+    }
+    var batch = db.batch();
+    STARTER_MENU.forEach(function(item, i){
+      var ref = db.collection("weddingDrinkMenu").doc();
+      batch.set(ref, {
+        name: item.name,
+        emoji: item.emoji,
+        volumeMl: Math.round(ozToMl(item.oz)),
+        category: item.category,
+        active: true,
+        order: i,
+        code: WEDDING_CODE
+      });
+    });
+    batch.commit().then(function(){
+      showToast("Starter menu loaded!");
+    }).catch(function(e){ console.error(e); showToast("Couldn't load starter menu — check your connection."); });
+  });
+
+  function renderAdminMenuList(){
+    var box = $("adminMenuList");
+    if(!menuItems.length){
+      box.innerHTML = '<div class="empty-state">No drinks yet — add one above.</div>';
+      return;
+    }
+    box.innerHTML = menuItems.map(function(m){
+      return '<div class="menu-item-row '+(m.active===false?'inactive':'')+'">'+
+        '<div class="mi-top"><span class="nm">'+escapeHtml(m.emoji||'🥂')+' '+escapeHtml(m.name)+'</span>'+
+        '<label class="switch"><input type="checkbox" data-toggle="'+m.id+'" '+(m.active!==false?'checked':'')+'><span class="slider"></span></label>'+
+        '</div>'+
+        '<div style="font-size:.78rem;color:var(--muted);">'+escapeHtml(m.category||'')+' · '+fmtNum(mlToOz(m.volumeMl))+' oz</div>'+
+        '</div>';
+    }).join("");
+    box.querySelectorAll("[data-toggle]").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        db.collection("weddingDrinkMenu").doc(cb.dataset.toggle).set({
+          active: cb.checked,
+          code: WEDDING_CODE
+        }, {merge:true}).catch(function(e){ console.error(e); showToast("Couldn't update — check your connection."); });
+      });
+    });
+  }
+
+  applyUnitUI();
+})();
+</script>
+</body>
+</html>
