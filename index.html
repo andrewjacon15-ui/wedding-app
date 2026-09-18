@@ -204,6 +204,32 @@
   .feed-item .fwhat{color:var(--muted);font-size:.85rem;font-style:italic;margin-left:6px;}
   .feed-item .fmsg{color:var(--ink);font-style:italic;margin-top:3px;font-size:1.02rem;overflow-wrap:anywhere;}
   .feed-item .btn-ghost{color:var(--danger);text-decoration:none;font-size:.9rem;}
+  /* Agenda */
+  .agenda-sub{text-align:center;color:var(--muted);font-style:italic;margin:-6px 0 6px;}
+  .agenda-group{font-family:var(--display);text-transform:uppercase;letter-spacing:3px;font-size:.9rem;color:var(--taupe);text-align:center;margin:26px 0 6px;padding-bottom:8px;border-bottom:1px solid var(--peach);}
+  .agenda-row{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--peach-light);}
+  .agenda-row:last-of-type{border-bottom:none;}
+  .agenda-row .at{flex:0 0 108px;font-family:var(--display);font-size:.82rem;letter-spacing:1px;text-transform:uppercase;color:var(--taupe);padding-top:3px;}
+  .agenda-row .ad{flex:1;min-width:0;}
+  .agenda-row .ad strong{display:block;font-weight:600;font-size:1.08rem;color:var(--taupe-dark);}
+  .agenda-row .ad span{display:block;font-style:italic;color:var(--muted);font-size:.95rem;margin-top:2px;}
+  .agenda-note{text-align:center;font-style:italic;color:var(--taupe);margin-top:22px;padding-top:16px;border-top:1px solid var(--peach);}
+  /* Drink of the Night */
+  .don{text-align:center;padding:4px 0 2px;}
+  .don .don-emoji{font-size:2.6rem;line-height:1;}
+  .don .don-name{font-family:var(--display);text-transform:uppercase;letter-spacing:3px;font-size:1.5rem;color:var(--taupe);margin-top:8px;}
+  .don .don-count{color:var(--muted);font-style:italic;font-size:1.05rem;margin-top:4px;}
+  .don .don-runners{margin-top:12px;padding-top:10px;border-top:1px solid var(--peach-light);color:var(--muted);font-size:.95rem;font-style:italic;}
+  /* Water check */
+  #waterNudge{position:fixed;inset:0;background:rgba(60,44,34,.55);z-index:260;display:none;align-items:center;justify-content:center;padding:24px;}
+  #waterNudge.show{display:flex;}
+  #waterNudge .nudge-box{background:var(--white);border:1px solid var(--peach);border-radius:var(--radius);padding:28px 24px;max-width:340px;width:100%;text-align:center;}
+  #waterNudge .nudge-emoji{font-size:2.4rem;line-height:1;}
+  #waterNudge h2{font-size:1.4rem;letter-spacing:3px;color:var(--taupe);margin:10px 0 8px;}
+  #waterNudge p{color:var(--ink);font-style:italic;font-size:1.05rem;margin:0 0 4px;}
+  /* Export */
+  .export-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+  .export-hint{color:var(--muted);font-style:italic;font-size:.95rem;margin:-4px 0 14px;text-align:center;}
   .photo-tile.is-hidden{opacity:.4;}
   .photo-tile .photo-flag{position:absolute;left:4px;bottom:4px;background:rgba(95,76,62,.85);color:var(--cream);font-size:.7rem;padding:2px 7px;border-radius:999px;font-style:italic;}
   .conn-banner{background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);border-radius:3px;padding:10px 12px;font-size:.95rem;font-style:italic;margin-bottom:14px;display:none;}
@@ -299,7 +325,38 @@
         </div>
       </section>
 
+      <section class="tab-panel" id="tab-agenda">
+        <div class="card">
+          <div class="section-title">Order of the Day</div>
+          <div class="agenda-sub">Saturday, November 7, 2026 &middot; Clarkesville, Georgia</div>
+
+          <div class="agenda-group">Ceremony</div>
+          <div class="agenda-row"><div class="at">By 4:15 PM</div><div class="ad"><strong>Guest arrival</strong><span>Guests are asked to be seated by 4:15 PM.</span></div></div>
+          <div class="agenda-row"><div class="at">4:15 PM</div><div class="ad"><strong>Pre-ceremony begins</strong></div></div>
+          <div class="agenda-row"><div class="at">4:30 PM</div><div class="ad"><strong>Ceremony begins</strong></div></div>
+          <div class="agenda-row"><div class="at">4:45 PM</div><div class="ad"><strong>Ceremony ends</strong><span>Approximate.</span></div></div>
+
+          <div class="agenda-group">Reception</div>
+          <div class="agenda-row"><div class="at">5:00 &ndash; 6:00 PM</div><div class="ad"><strong>Cocktail hour</strong></div></div>
+          <div class="agenda-row"><div class="at">6:00 &ndash; 7:00 PM</div><div class="ad"><strong>Dinner</strong></div></div>
+          <div class="agenda-row"><div class="at">7:00 &ndash; 10:00 PM</div><div class="ad"><strong>Dance party</strong><span>No amplified music after 10:00 PM.</span></div></div>
+          <div class="agenda-row"><div class="at">10:00 PM</div><div class="ad"><strong>Send-off &amp; departure</strong><span>The reception wraps at 10:00 PM.</span></div></div>
+          <div class="agenda-row"><div class="at">10:00 PM</div><div class="ad"><strong>Late night food</strong></div></div>
+          <div class="agenda-row"><div class="at">10:00 &ndash; 11:00 PM</div><div class="ad"><strong>End of event &amp; last call</strong></div></div>
+
+          <div class="agenda-group">Getting Home</div>
+          <div class="agenda-row"><div class="at">9:00 PM</div><div class="ad"><strong>First shuttle departs</strong></div></div>
+          <div class="agenda-row"><div class="at">11:00 PM</div><div class="ad"><strong>Last shuttle departs</strong></div></div>
+
+          <div class="agenda-note">Please note: there will be no bouquet toss.</div>
+        </div>
+      </section>
+
       <section class="tab-panel" id="tab-leaderboard">
+        <div class="card" id="drinkOfNightCard" style="display:none;">
+          <div class="section-title">Drink of the Night</div>
+          <div id="drinkOfNight"></div>
+        </div>
         <div class="card">
           <div class="section-title">Leaderboard</div>
           <div id="leaderboardList"><div class="empty-state">No one's logged a drink yet…</div></div>
@@ -375,6 +432,17 @@
           </div>
 
           <div class="card">
+            <div class="section-title">Export &amp; Share</div>
+            <div class="export-hint">Grab the results to keep or share after the wedding.</div>
+            <div class="export-grid">
+              <button class="btn-secondary" id="exportCardBtn">Results card (image)</button>
+              <button class="btn-secondary" id="exportStatsBtn">Final stats (CSV)</button>
+              <button class="btn-secondary" id="exportMessagesBtn">All messages (CSV)</button>
+              <button class="btn-secondary" id="exportLogBtn">Complete drink log (CSV)</button>
+            </div>
+          </div>
+
+          <div class="card">
             <div class="section-title">Manage Guests</div>
             <button class="btn-danger" id="purgeAllBtn" style="margin-bottom:14px;">Purge all guests &amp; drinks</button>
             <div id="adminGuestList"><div class="empty-state">No guests yet.</div></div>
@@ -387,9 +455,10 @@
 
   <nav class="bottom-nav">
     <button data-tab="drinks" class="active">Drinks</button>
-    <button data-tab="me">My Stats</button>
-    <button data-tab="leaderboard">Leaderboard</button>
+    <button data-tab="me">Stats</button>
+    <button data-tab="leaderboard">Board</button>
     <button data-tab="photos">Photos</button>
+    <button data-tab="agenda">Agenda</button>
   </nav>
 
   <div class="footer-note">Thank you for celebrating with us.<br><button class="admin-link" id="adminLink">Admin</button></div>
@@ -399,6 +468,15 @@
   <button class="lb-close" id="lightboxClose" aria-label="Close">&times;</button>
   <img id="lightboxImg" alt="">
   <div class="lb-cap" id="lightboxCap"></div>
+</div>
+
+<div id="waterNudge">
+  <div class="nudge-box">
+    <div class="nudge-emoji">💧</div>
+    <h2>Water check?</h2>
+    <p id="nudgeMsg"></p>
+    <button class="btn-primary" id="nudgeOk">Good call</button>
+  </div>
 </div>
 
 <div id="toast"><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
@@ -464,6 +542,7 @@
   function censorProfanity(text){
     return String(text == null ? "" : text).replace(PROFANE_RE, maskWord);
   }
+  function plural(n, word){ return n + " " + word + (n === 1 ? "" : "s"); }
   function fmtNum(n, decimals){
     return Number(n).toFixed(decimals==null?1:decimals).replace(/\.0$/,"");
   }
@@ -534,7 +613,7 @@
 
   // ---- Tabs ----
   var navButtons = document.querySelectorAll("nav.bottom-nav button");
-  var TAB_NAMES = ["drinks", "me", "leaderboard", "photos", "admin"];
+  var TAB_NAMES = ["drinks", "me", "leaderboard", "photos", "agenda", "admin"];
   // The current tab is kept in the URL hash (and localStorage as a backup) so a
   // refresh puts you back where you were instead of on Drinks.
   function showTab(name, restoring){
@@ -617,6 +696,7 @@
       menuItems = [];
       snap.forEach(function(doc){ menuItems.push(Object.assign({id:doc.id}, doc.data())); });
       renderMenuGrid();
+      renderDrinkOfNight();
       renderAdminMenuList();
       markWriteOk();
     }, function(err){ console.error(err); markWriteError(); });
@@ -668,6 +748,23 @@
   }
   ensureGuestDoc();
 
+  // ---- Water check: a cheeky reminder after every 3rd drink ----
+  var NUDGE_LINES = [
+    "That's {n} drinks. Grab a glass of water, your feet will thank you on the dance floor.",
+    "{n} drinks in! Time to hydrate before the next round.",
+    "Psst... {n} drinks down. Sip some water and look out for each other."
+  ];
+  function maybeWaterNudge(count, item){
+    if(count < 3 || count % 3 !== 0) return;
+    if((item.category || "") === "Non-Alcoholic") return;
+    var line = NUDGE_LINES[(count / 3 - 1) % NUDGE_LINES.length].replace("{n}", count);
+    setTimeout(function(){
+      $("nudgeMsg").textContent = line;
+      $("waterNudge").classList.add("show");
+    }, 900);
+  }
+  $("nudgeOk").addEventListener("click", function(){ $("waterNudge").classList.remove("show"); });
+
   function updateNoteCount(){
     var n = ($("drinkNote").value || "").length;
     $("drinkNoteCount").textContent = n >= 100 ? (n + " / 140") : "";
@@ -702,15 +799,21 @@
     if(note) logData.message = note;
     batch.set(logRef, logData);
     var guestRef = db.collection("weddingDrinkGuests").doc(guestId);
+    // byItem keeps a running count of each drink per guest, so "Drink of the
+    // Night" can be totalled from the guest list with no extra database reads.
+    var byItemInc = {};
+    byItemInc[item.id] = firebase.firestore.FieldValue.increment(1);
     batch.set(guestRef, {
       name: guestName,
       nameLower: guestName.toLowerCase(),
       totalMl: firebase.firestore.FieldValue.increment(item.volumeMl),
       drinkCount: firebase.firestore.FieldValue.increment(1),
+      byItem: byItemInc,
       archived: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true});
 
+    var countAfter = (myGuestDoc && myGuestDoc.archived !== true ? (myGuestDoc.drinkCount || 0) : 0) + 1;
     markWriteStart();
     batch.commit().then(function(){
       markWriteOk();
@@ -718,8 +821,9 @@
       updateCooldownUI();
       if(note){ $("drinkNote").value = ""; updateNoteCount(); }
       showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)", function(){
-        undoLog(logRef.id, item.volumeMl);
+        undoLog(logRef.id, item.volumeMl, item.id);
       });
+      maybeWaterNudge(countAfter, item);
     }).catch(function(e){
       console.error(e);
       markWriteError();
@@ -727,17 +831,22 @@
     });
   }
 
-  function undoLog(logId, volumeMl){
+  function undoLog(logId, volumeMl, itemId){
     if(!firebaseReady) return;
     var batch = db.batch();
     batch.update(db.collection("weddingDrinkLog").doc(logId), { voided: true });
-    batch.set(db.collection("weddingDrinkGuests").doc(guestId), {
+    var undoData = {
       name: guestName,
       nameLower: guestName.toLowerCase(),
       totalMl: firebase.firestore.FieldValue.increment(-volumeMl),
       drinkCount: firebase.firestore.FieldValue.increment(-1),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+    };
+    if(itemId){
+      undoData.byItem = {};
+      undoData.byItem[itemId] = firebase.firestore.FieldValue.increment(-1);
+    }
+    batch.set(db.collection("weddingDrinkGuests").doc(guestId), undoData, {merge:true});
     batch.commit().then(function(){
       optimisticLastDrinkAt = 0;
       updateCooldownUI();
@@ -839,12 +948,12 @@
         '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span>'+
         (l.message ? '<span class="note">&ldquo;'+escapeHtml(censorProfanity(l.message))+'&rdquo;</span>' : '')+
         '</span></div>'+
-        (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'">Undo</button>')+
+        (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'" data-item="'+escapeHtml(l.itemId||'')+'">Undo</button>')+
         '</div>';
     }).join("");
     box.querySelectorAll("[data-undo]").forEach(function(btn){
       btn.addEventListener("click", function(){
-        undoLog(btn.dataset.undo, parseFloat(btn.dataset.vol));
+        undoLog(btn.dataset.undo, parseFloat(btn.dataset.vol), btn.dataset.item || null);
       });
     });
   }
@@ -852,7 +961,46 @@
   // ==========================================================
   // Leaderboard
   // ==========================================================
+  // Total each drink across all active guests: [{id,name,emoji,count}], most-logged first.
+  function getDrinkCounts(){
+    var totals = {};
+    allGuests.forEach(function(g){
+      if(g.archived === true || !g.byItem) return;
+      Object.keys(g.byItem).forEach(function(id){
+        var n = Number(g.byItem[id]) || 0;
+        if(n > 0) totals[id] = (totals[id] || 0) + n;
+      });
+    });
+    return Object.keys(totals).map(function(id){
+      var m = menuItems.find(function(x){ return x.id === id; });
+      return { id: id, name: m ? m.name : "Mystery drink", emoji: m ? (m.emoji || "🥂") : "🥂", count: totals[id] };
+    }).sort(function(a, b){ return b.count - a.count; });
+  }
+
+  function renderDrinkOfNight(){
+    var card = $("drinkOfNightCard");
+    var counts = getDrinkCounts();
+    if(!counts.length){ card.style.display = "none"; return; }
+    var top = counts[0];
+    var tied = counts.filter(function(c){ return c.count === top.count; });
+    var runners = counts.slice(tied.length, tied.length + 3).map(function(c){
+      return escapeHtml(c.name) + " (" + c.count + ")";
+    });
+    var title = tied.length > 1
+      ? tied.map(function(c){ return escapeHtml(c.name); }).join(" &amp; ")
+      : escapeHtml(top.name);
+    var emoji = tied.length > 1 ? tied.map(function(c){ return escapeHtml(c.emoji); }).join(" ") : escapeHtml(top.emoji);
+    card.style.display = "block";
+    $("drinkOfNight").innerHTML = '<div class="don">'+
+      '<div class="don-emoji">'+emoji+'</div>'+
+      '<div class="don-name">'+title+'</div>'+
+      '<div class="don-count">'+top.count+(tied.length > 1 ? ' each' : '')+' logged'+(tied.length > 1 ? ' (a tie!)' : '')+'</div>'+
+      (runners.length ? '<div class="don-runners">Runners-up: '+runners.join(" &middot; ")+'</div>' : '')+
+      '</div>';
+  }
+
   function renderLeaderboard(){
+    renderDrinkOfNight();
     var box = $("leaderboardList");
     var withDrinks = allGuests.filter(function(g){ return (g.drinkCount||0) > 0 && g.archived !== true; });
     if(!withDrinks.length){
@@ -867,7 +1015,7 @@
         '<div class="lb-rank '+(i<3?'top'+(i+1):'')+'">'+rankDisplay+'</div>'+
         '<div class="lb-name">'+escapeHtml(g.name)+(isMe?'<span class="you-tag">YOU</span>':'')+'</div>'+
         '<div class="lb-vol"><div class="n">'+fmtNum(mlToOz(g.totalMl||0))+' oz</div>'+
-        '<div class="c">'+(g.drinkCount||0)+' drinks</div></div>'+
+        '<div class="c">'+plural(g.drinkCount||0, "drink")+'</div></div>'+
         '</div>';
     }).join("");
   }
@@ -1216,6 +1364,207 @@
     });
   }
 
+  // ---- Export & share ----
+  function csvCell(v){
+    var s = v == null ? "" : String(v);
+    if(/^[=+\-@\t\r]/.test(s)) s = "'" + s;   // stop spreadsheet formula injection
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function downloadBlob(filename, blob){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  }
+  function downloadCsv(name, rows){
+    var text = "﻿" + rows.map(function(r){ return r.map(csvCell).join(","); }).join("\r\n");
+    downloadBlob("andrew-lydia-" + name + "-" + new Date().toISOString().slice(0, 10) + ".csv", new Blob([text], {type: "text/csv;charset=utf-8"}));
+  }
+  function pad2(n){ return (n < 10 ? "0" : "") + n; }
+  function fmtStamp(ts){
+    if(!ts || !ts.toDate) return "";
+    var d = ts.toDate();
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+  }
+  function activeRankedGuests(){
+    return allGuests.filter(function(g){ return (g.drinkCount || 0) > 0 && g.archived !== true; });
+  }
+  function fetchAllLogs(){
+    return db.collection("weddingDrinkLog").orderBy("loggedAt", "asc").get().then(function(snap){
+      var rows = [];
+      snap.forEach(function(doc){ rows.push(Object.assign({id: doc.id}, doc.data())); });
+      return rows;
+    });
+  }
+  function exportBusy(label, promise){
+    showToast(label + "...");
+    return promise.catch(function(e){ console.error(e); showToast("Export failed. Check your connection and try again."); });
+  }
+
+  $("exportStatsBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    var guests = activeRankedGuests();
+    var items = menuItems.filter(function(m){
+      return m.active !== false || guests.some(function(g){ return g.byItem && Number(g.byItem[m.id]) > 0; });
+    });
+    var header = ["Rank", "Guest", "Drinks", "Total fl oz", "Total mL"].concat(items.map(function(m){ return m.name + " (count)"; }));
+    var rows = [header];
+    guests.forEach(function(g, i){
+      var by = g.byItem || {};
+      rows.push([i + 1, g.name, g.drinkCount || 0, fmtNum(mlToOz(g.totalMl || 0), 1), Math.round(g.totalMl || 0)]
+        .concat(items.map(function(m){ return Math.max(0, Number(by[m.id]) || 0); })));
+    });
+    downloadCsv("final-stats", rows);
+    showToast("Final stats downloaded.");
+  });
+
+  $("exportMessagesBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    exportBusy("Preparing messages", fetchAllLogs().then(function(logs){
+      var rows = [["Time", "Guest", "Drink", "Message", "Status"]];
+      logs.filter(function(l){ return l.message; }).forEach(function(l){
+        rows.push([fmtStamp(l.loggedAt), l.guestName, l.itemName, censorProfanity(l.message),
+          l.voided === true ? "drink undone" : (l.messageHidden === true ? "hidden by admin" : "shown")]);
+      });
+      downloadCsv("messages", rows);
+      showToast(rows.length - 1 + " messages downloaded.");
+    }));
+  });
+
+  $("exportLogBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    exportBusy("Preparing drink log", fetchAllLogs().then(function(logs){
+      var rows = [["Time", "Guest", "Guest ID", "Drink", "Category", "fl oz", "mL", "Message", "Undone", "Message hidden"]];
+      logs.forEach(function(l){
+        rows.push([fmtStamp(l.loggedAt), l.guestName, l.guestId, l.itemName, l.category || "",
+          fmtNum(mlToOz(l.volumeMl || 0), 1), Math.round(l.volumeMl || 0), l.message ? censorProfanity(l.message) : "",
+          l.voided === true ? "yes" : "no", l.messageHidden === true ? "yes" : "no"]);
+      });
+      downloadCsv("complete-drink-log", rows);
+      showToast(logs.length + " drinks downloaded.");
+    }));
+  });
+
+  function loadImageSrc(src){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ resolve(null); };
+      img.src = src;
+    });
+  }
+  // Draw text with manual letter-spacing (works in every browser's canvas).
+  function drawSpaced(ctx, text, cx, y, spacing){
+    var chars = text.split("");
+    var widths = chars.map(function(c){ return ctx.measureText(c).width; });
+    var total = widths.reduce(function(a, b){ return a + b; }, 0) + spacing * (chars.length - 1);
+    var x = cx - total / 2;
+    ctx.textAlign = "left";
+    chars.forEach(function(c, i){ ctx.fillText(c, x, y); x += widths[i] + spacing; });
+    ctx.textAlign = "center";
+  }
+
+  function buildResultsCard(){
+    var fontsReady = Promise.all([
+      document.fonts.load('80px "Amarante"'),
+      document.fonts.load('600 30px "Crimson Text"'),
+      document.fonts.load('italic 30px "Crimson Text"'),
+      document.fonts.load('30px "Crimson Text"')
+    ]).catch(function(){});
+    var recentPhotos = photos.filter(function(p){ return p.hidden !== true && isImageDataUrl(p.thumb); }).slice(0, 4);
+    return Promise.all([fontsReady, Promise.all(recentPhotos.map(function(p){ return loadImageSrc(p.thumb); }))]).then(function(res){
+      var imgs = res[1].filter(Boolean);
+      var W = 1080, dy = imgs.length ? 260 : 0, H = 1350 + dy;
+      var c = document.createElement("canvas"); c.width = W; c.height = H;
+      var ctx = c.getContext("2d");
+      var TAUPE = "#867060", DARK = "#5f4c3e", MUTED = "#9a8878", PEACH = "#e9d5c5";
+      ctx.fillStyle = "#FFFAF5"; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = PEACH; ctx.lineWidth = 3; ctx.strokeRect(34, 34, W - 68, H - 68);
+      ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+
+      ctx.fillStyle = TAUPE; ctx.font = '84px "Amarante", Georgia, serif';
+      drawSpaced(ctx, "ANDREW & LYDIA", W / 2, 180, 8);
+      ctx.font = '600 30px "Crimson Text", Georgia, serif'; ctx.fillStyle = TAUPE;
+      drawSpaced(ctx, "NOVEMBER 7, 2026  •  CLARKESVILLE, GEORGIA", W / 2, 238, 3);
+      ctx.fillStyle = "#b08a6b"; ctx.fillRect(W / 2 - 60, 274, 120, 2);
+
+      if(imgs.length){
+        var gap = 16, size = Math.floor((W - 140 - gap * 3) / 4), y0 = 316;
+        var x0 = Math.round((W - (imgs.length * size + (imgs.length - 1) * gap)) / 2);
+        imgs.forEach(function(img, i){
+          var side = Math.min(img.naturalWidth, img.naturalHeight);
+          var sx = (img.naturalWidth - side) / 2, sy = (img.naturalHeight - side) / 2;
+          ctx.drawImage(img, sx, sy, side, side, x0 + i * (size + gap), y0, size, size);
+        });
+      }
+
+      var y = 350 + dy;
+      ctx.fillStyle = TAUPE; ctx.font = '36px "Amarante", Georgia, serif';
+      drawSpaced(ctx, "THE CHEERS LEADERBOARD", W / 2, y, 5);
+
+      var ranked = activeRankedGuests().slice(0, 5);
+      y += 70;
+      if(!ranked.length){
+        ctx.fillStyle = MUTED; ctx.font = 'italic 40px "Crimson Text", Georgia, serif';
+        ctx.fillText("No drinks logged yet.", W / 2, y + 40);
+        y += 110;
+      }
+      ranked.forEach(function(g, i){
+        ctx.textAlign = "left"; ctx.fillStyle = MUTED; ctx.font = '40px "Amarante", Georgia, serif';
+        ctx.fillText(String(i + 1), 110, y);
+        ctx.fillStyle = DARK; ctx.font = '600 46px "Crimson Text", Georgia, serif';
+        var name = g.name.length > 18 ? g.name.slice(0, 17) + "…" : g.name;
+        ctx.fillText(name, 190, y);
+        ctx.textAlign = "right"; ctx.fillStyle = TAUPE; ctx.font = '38px "Amarante", Georgia, serif';
+        ctx.fillText(fmtNum(mlToOz(g.totalMl || 0), 1) + " OZ", W - 110, y - 2);
+        ctx.fillStyle = MUTED; ctx.font = 'italic 28px "Crimson Text", Georgia, serif';
+        ctx.fillText(plural(g.drinkCount || 0, "drink"), W - 110, y + 32);
+        ctx.strokeStyle = "#f3e6da"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(110, y + 50); ctx.lineTo(W - 110, y + 50); ctx.stroke();
+        y += 92;
+      });
+      ctx.textAlign = "center";
+
+      var counts = getDrinkCounts();
+      y += 40;
+      ctx.fillStyle = TAUPE; ctx.font = '32px "Amarante", Georgia, serif';
+      drawSpaced(ctx, "DRINK OF THE NIGHT", W / 2, y, 5);
+      if(counts.length){
+        var topN = counts[0].count, tied = counts.filter(function(x){ return x.count === topN; });
+        ctx.font = '84px serif'; ctx.fillStyle = DARK;
+        ctx.fillText(tied.map(function(x){ return x.emoji; }).join(" "), W / 2, y + 100);
+        ctx.fillStyle = TAUPE; ctx.font = '54px "Amarante", Georgia, serif';
+        drawSpaced(ctx, tied.map(function(x){ return x.name; }).join(" & ").toUpperCase(), W / 2, y + 175, 4);
+        ctx.fillStyle = MUTED; ctx.font = 'italic 36px "Crimson Text", Georgia, serif';
+        ctx.fillText(topN + (tied.length > 1 ? " each" : "") + " logged", W / 2, y + 225);
+      }
+
+      var guests = activeRankedGuests();
+      var totalMl = guests.reduce(function(a, g){ return a + (g.totalMl || 0); }, 0);
+      var totalDrinks = guests.reduce(function(a, g){ return a + (g.drinkCount || 0); }, 0);
+      ctx.fillStyle = TAUPE; ctx.font = 'italic 36px "Crimson Text", Georgia, serif';
+      ctx.fillText(plural(guests.length, "guest") + " • " + plural(totalDrinks, "drink") + " • " + fmtNum(totalMl / 3785.41, 1) + (fmtNum(totalMl / 3785.41, 1) === "1" ? " gallon" : " gallons") + " poured", W / 2, H - 150);
+      ctx.fillStyle = MUTED; ctx.font = 'italic 30px "Crimson Text", Georgia, serif';
+      ctx.fillText("Thank you for celebrating with us.", W / 2, H - 96);
+
+      return new Promise(function(resolve){ c.toBlob(resolve, "image/png"); });
+    });
+  }
+
+  $("exportCardBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    exportBusy("Building results card", buildResultsCard().then(function(blob){
+      if(!blob){ showToast("Couldn't build the card."); return; }
+      downloadBlob("andrew-lydia-results-" + new Date().toISOString().slice(0, 10) + ".png", blob);
+      var url = URL.createObjectURL(blob);
+      $("lightboxImg").src = url;
+      $("lightboxCap").textContent = "Saved. On a phone, press and hold the image to share it.";
+      $("lightbox").classList.add("show");
+      hideToast();
+    }));
+  });
+
   // ---- Purge / remove guests ----
   function archiveGuest(id){
     return db.collection("weddingDrinkLog").where("guestId","==",id).get().then(function(snap){
@@ -1226,6 +1575,7 @@
       batch.set(db.collection("weddingDrinkGuests").doc(id), {
         totalMl: 0,
         drinkCount: 0,
+        byItem: firebase.firestore.FieldValue.delete(),
         archived: true,
         code: WEDDING_CODE,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1267,7 +1617,7 @@
     box.innerHTML = visible.map(function(g){
       return '<div class="guest-row">'+
         '<div class="gr-info"><span class="gr-name">'+escapeHtml(g.name)+'</span>'+
-        '<span class="gr-stats">'+fmtNum(mlToOz(g.totalMl||0))+' oz · '+(g.drinkCount||0)+' drinks</span></div>'+
+        '<span class="gr-stats">'+fmtNum(mlToOz(g.totalMl||0))+' oz · '+plural(g.drinkCount||0, "drink")+'</span></div>'+
         '<button class="btn-ghost" data-remove-guest="'+g.id+'" data-name="'+escapeHtml(g.name)+'">Remove</button>'+
         '</div>';
     }).join("");

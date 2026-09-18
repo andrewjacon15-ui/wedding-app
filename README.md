@@ -16,7 +16,15 @@ guests open on their phone.
   live countdown until the next one unlocks. Undoing a mis-tap clears it
   immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
-- **Leaderboard** — everyone's total liquid volume, ranked live.
+- **Leaderboard** — everyone's total liquid volume, ranked live, with a
+  **Drink of the Night** card showing the most-logged drink and how many.
+- **Water check** — after every 3rd drink a guest logs, a cheeky "Water check?"
+  reminder pops up (skipped when the drink was non-alcoholic).
+- **Agenda tab** — the order of the day, shuttle times, and the no-bouquet-toss
+  note. Edit the times directly in `index.html` (search for "Order of the Day").
+- **Export & share (Admin)** — download the final stats, all notes, or the
+  complete drink log as CSV, or a shareable results card image (top 5,
+  Drink of the Night, totals, and your latest photos).
 - **Drink notes** — an optional 140-character note can ride along with any
   drink. Notes show in My Recent Drinks and in a "Notes from the Bar" feed on
   the Leaderboard tab; admins can hide any note. Swear words are masked but
@@ -44,7 +52,7 @@ guests open on their phone.
   or remove one guest at a time. Soft-delete under the hood (see below), so a
   removed guest's history isn't destroyed — they just drop off the board
   until they log another drink, at which point they reappear starting fresh.
-- **Mobile-first** — big tap targets, a four-tab bottom bar (Admin lives in a
+- **Mobile-first** — big tap targets, a five-tab bottom bar (Admin lives in a
   small footer link so the bar never feels cramped), works great added to a
   phone's home screen.
 
