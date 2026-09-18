@@ -11,6 +11,9 @@ website guests open on their phone.
   each with its own pour size, so totals are accurate to your actual bar.
 - **One-tap logging** — guests pick their name once, then tap a drink each
   time they grab one. Includes instant "Undo" if they misclick.
+- **5-minute pacing cooldown** — after logging a drink, the menu locks with a
+  live countdown until the next one unlocks. Undoing a mis-tap clears it
+  immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
 - **Leaderboard** — everyone's total liquid volume, ranked live, with medals
   for the top 3.

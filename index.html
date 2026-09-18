@@ -118,6 +118,13 @@
   .drink-btn .name{font-weight:600;font-size:.87rem;line-height:1.2;}
   .drink-btn .vol{font-size:.74rem;color:var(--muted);}
   .empty-state{text-align:center;color:var(--muted);padding:30px 10px;font-size:.92rem;}
+  .cooldown-banner{
+    background:var(--blush-light);color:var(--wine-dark);border:1px solid var(--blush);
+    border-radius:10px;padding:10px 12px;font-size:.85rem;font-weight:600;
+    margin-bottom:14px;text-align:center;display:none;
+  }
+  .cooldown-banner.show{display:block;}
+  .drink-grid.cooling-down .drink-btn{opacity:.4;pointer-events:none;}
   /* Me tab */
   .stat-hero{text-align:center;padding:10px 0 4px;}
   .stat-hero .big{font-family:'Playfair Display',serif;font-size:2.6rem;color:var(--wine);font-weight:700;line-height:1;}
@@ -209,6 +216,7 @@
       <section class="tab-panel active" id="tab-drinks">
         <div class="card">
           <div class="section-title">🍸 Curated Bar Menu</div>
+          <div class="cooldown-banner" id="cooldownBanner">⏳ Next drink unlocks in <span id="cooldownTime">0:00</span></div>
           <div class="drink-grid" id="menuGrid">
             <div class="empty-state">Loading the bar menu…</div>
           </div>
@@ -319,6 +327,7 @@
   "use strict";
 
   var OZ_PER_ML = 1/29.5735;
+  var DRINK_COOLDOWN_MS = 5 * 60 * 1000;
   var STARTER_MENU = [
     {name:"IPA", emoji:"🍺", oz:12, category:"Beer"},
     {name:"Light Beer", emoji:"🍻", oz:12, category:"Beer"},
@@ -370,6 +379,12 @@
     if(s < 86400) return Math.floor(s/3600) + "h ago";
     return Math.floor(s/86400) + "d ago";
   }
+  function fmtCountdown(ms){
+    var totalSec = Math.max(0, Math.ceil(ms/1000));
+    var m = Math.floor(totalSec/60);
+    var s = totalSec % 60;
+    return m + ":" + (s<10?"0":"") + s;
+  }
 
   // ---- Guest identity ----
   var guestName = localStorage.getItem("wdt_guest_name") || "";
@@ -382,6 +397,7 @@
     localStorage.setItem("wdt_guest_name", guestName);
     $("guestChipName").textContent = guestName;
     ensureGuestDoc();
+    watchMyLog();
   }
 
   $("gateSubmit").addEventListener("click", submitGate);
@@ -524,6 +540,11 @@
     if(!guestId){ $("nameGate").style.display = "flex"; return; }
     var item = menuItems.find(function(m){ return m.id === itemId; });
     if(!item) return;
+    var cooldownRemaining = getCooldownRemainingMs();
+    if(cooldownRemaining > 0){
+      showToast("Slow down — next drink unlocks in " + fmtCountdown(cooldownRemaining) + ".");
+      return;
+    }
 
     var batch = db.batch();
     var logRef = db.collection("weddingDrinkLog").doc();
@@ -550,6 +571,8 @@
     markWriteStart();
     batch.commit().then(function(){
       markWriteOk();
+      optimisticLastDrinkAt = Date.now();
+      updateCooldownUI();
       showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)", function(){
         undoLog(logRef.id, item.volumeMl);
       });
@@ -572,6 +595,8 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true});
     batch.commit().then(function(){
+      optimisticLastDrinkAt = 0;
+      updateCooldownUI();
       showToast("Drink removed.");
     }).catch(function(e){ console.error(e); showToast("Couldn't undo — check your connection."); });
   }
@@ -582,6 +607,8 @@
   var myLogEntries = [];
   var myGuestDoc = null;
   var allGuests = [];
+  var optimisticLastDrinkAt = 0;
+  var cooldownTicker = null;
 
   if(firebaseReady){
     db.collection("weddingDrinkGuests").onSnapshot(function(snap){
@@ -594,9 +621,11 @@
     }, function(err){ console.error(err); markWriteError(); });
   }
 
+  var unwatchMyLog = null;
   function watchMyLog(){
     if(!firebaseReady || !guestId) return;
-    db.collection("weddingDrinkLog").where("guestId","==",guestId).onSnapshot(function(snap){
+    if(unwatchMyLog) unwatchMyLog();
+    unwatchMyLog = db.collection("weddingDrinkLog").where("guestId","==",guestId).onSnapshot(function(snap){
       myLogEntries = [];
       snap.forEach(function(doc){ myLogEntries.push(Object.assign({id:doc.id}, doc.data())); });
       myLogEntries.sort(function(a,b){
@@ -605,9 +634,36 @@
         return tb - ta;
       });
       renderMyLog();
+      updateCooldownUI();
     }, function(err){ console.error(err); });
   }
   watchMyLog();
+
+  // ---- Drink cooldown ----
+  function getLastDrinkAtMs(){
+    var last = myLogEntries.find(function(l){ return !l.voided; });
+    var fromSnapshot = (last && last.loggedAt) ? last.loggedAt.toMillis() : 0;
+    return Math.max(fromSnapshot, optimisticLastDrinkAt);
+  }
+  function getCooldownRemainingMs(){
+    var last = getLastDrinkAtMs();
+    if(!last) return 0;
+    return (last + DRINK_COOLDOWN_MS) - Date.now();
+  }
+  function updateCooldownUI(){
+    var remaining = getCooldownRemainingMs();
+    var banner = $("cooldownBanner");
+    var grid = $("menuGrid");
+    if(remaining > 0){
+      banner.classList.add("show");
+      $("cooldownTime").textContent = fmtCountdown(remaining);
+      grid.classList.add("cooling-down");
+    }else{
+      banner.classList.remove("show");
+      grid.classList.remove("cooling-down");
+    }
+  }
+  cooldownTicker = setInterval(updateCooldownUI, 1000);
 
   function renderMyStats(){
     var totalMl = myGuestDoc ? (myGuestDoc.totalMl||0) : 0;
