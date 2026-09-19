@@ -39,9 +39,15 @@ guests open on their phone.
   are dropped entirely (the drink still logs). It is a word filter, so it can't
   catch every innuendo; use Hide for anything it misses.
 - **Guest photos** — a Photos tab where anyone can snap or pick photos (up to
-  10 at a time). Photos are shrunk on the phone and stored in Firestore, so
-  no paid Storage plan is needed. Tap a photo to view it larger; admins can
-  permanently delete any photo (Admin is the small link under the footer).
+  10 at a time). Each photo is shrunk on the phone to a 600px thumbnail (for the
+  grid) and a 2048px full-size copy (when you tap it), both JPEGs kept under
+  Firestore's 1 MiB document limit, and stored in Firestore, so no paid Storage
+  plan is needed. Typical photos come out around 300–600 KB, so a few hundred
+  fit comfortably inside the free plan's 1 GiB (roughly 1,000+ before it
+  matters). The gallery only loads when someone opens the Photos tab, which
+  saves database reads. Admins can permanently delete any single photo, or
+  **Delete all photos** (Admin > Manage Photos) to clear the gallery and the
+  database (Admin is the small link under the footer).
 - **Grandparent check** — after picking photos, and before anything uploads, a
   "Photo check" popup shows the photo with one of 12 rotating prompts ("Would you
   want your grandparents to see this?", "Pause. Would Nana approve?", ...) and

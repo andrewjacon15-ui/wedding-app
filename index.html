@@ -402,7 +402,7 @@
             <input type="file" id="photoInput" accept="image/*" multiple>
           </label>
           <div class="photo-hint">Snap one or pick from your library. Up to 10 at a time. Photos are checked automatically, and anything inappropriate is blocked.</div>
-          <div class="photo-grid" id="photoGrid"><div class="empty-state" style="grid-column:1/-1;">No photos yet. Be the first!</div></div>
+          <div class="photo-grid" id="photoGrid"><div class="empty-state" style="grid-column:1/-1;">Loading photos…</div></div>
         </div>
       </section>
 
@@ -473,6 +473,12 @@
             <div class="section-title">Manage Guests</div>
             <button class="btn-danger" id="purgeAllBtn" style="margin-bottom:14px;">Purge all guests &amp; drinks</button>
             <div id="adminGuestList"><div class="empty-state">No guests yet.</div></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Manage Photos</div>
+            <div class="export-hint" style="margin:0 0 12px;">Delete a single photo with the Delete button on it in the Photos tab.</div>
+            <button class="btn-danger" id="purgePhotosBtn">Delete all photos</button>
           </div>
         </div>
       </section>
@@ -795,6 +801,7 @@
     try{ localStorage.setItem("wdt_tab", name); }catch(e){}
     try{ history.replaceState(null, "", "#" + name); }catch(e){}
     if(name === "photos") loadModerationModel().catch(function(){});
+    if(name === "photos" || name === "admin") watchPhotos();
   }
   function restoreTab(){
     var fromHash = (location.hash || "").replace("#", "");
@@ -1239,9 +1246,11 @@
   // Photos
   // ==========================================================
   // No Storage bucket (needs a paid plan): photos are shrunk in the browser and
-  // saved as small JPEG data URLs in Firestore. A ~400px thumbnail lives in
-  // weddingDrinkPhotos (cheap to list); the ~1280px copy lives in
-  // weddingDrinkPhotoFull and is only fetched when someone taps a photo.
+  // saved as JPEG data URLs in Firestore. A ~600px thumbnail (<=90 KB) lives in
+  // weddingDrinkPhotos (cheap to list); the ~2048px copy (<=850 KB, just under
+  // Firestore's 1 MiB document limit) lives in weddingDrinkPhotoFull and is
+  // only fetched when someone taps a photo. At a few hundred photos that is
+  // well under the free plan's 1 GiB of storage.
   var MAX_PHOTOS_PER_PICK = 10;
   var photos = [];
   var photoUploading = false;
@@ -1255,15 +1264,25 @@
       img.src = url;
     });
   }
+  // Shrinks to at most maxDim on the long side and keeps the data URL under
+  // maxLen characters: first by lowering JPEG quality (down to 0.5), and if that
+  // still isn't enough, by making the picture a bit smaller and trying again.
   function scaleToJpeg(img, maxDim, maxLen){
-    var scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
-    var c = document.createElement("canvas");
-    c.width = Math.max(1, Math.round(img.naturalWidth * scale));
-    c.height = Math.max(1, Math.round(img.naturalHeight * scale));
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    var q = 0.75;
-    var out = c.toDataURL("image/jpeg", q);
-    while(out.length > maxLen && q > 0.3){ q -= 0.1; out = c.toDataURL("image/jpeg", q); }
+    var longest = Math.max(img.naturalWidth, img.naturalHeight);
+    var dim = Math.min(longest, maxDim);
+    var out = "";
+    for(var attempt = 0; attempt < 5; attempt++){
+      var scale = dim / longest;
+      var c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      var q = 0.82;
+      out = c.toDataURL("image/jpeg", q);
+      while(out.length > maxLen && q > 0.5){ q -= 0.08; out = c.toDataURL("image/jpeg", q); }
+      if(out.length <= maxLen) return out;
+      dim = Math.round(dim * 0.8);
+    }
     return out;
   }
   function isImageDataUrl(s){ return typeof s === "string" && s.indexOf("data:image/") === 0; }
@@ -1390,8 +1409,8 @@
           });
         }).then(function(img){
           if(!img) return false;
-          var thumb = scaleToJpeg(img, 400, 60000);
-          var full = scaleToJpeg(img, 1280, 650000);
+          var thumb = scaleToJpeg(img, 600, 90000);
+          var full = scaleToJpeg(img, 2048, 850000);
           var thumbRef = db.collection("weddingDrinkPhotos").doc();
           var batch = db.batch();
           batch.set(thumbRef, {
@@ -1415,16 +1434,26 @@
     });
   }
 
-  if(firebaseReady){
-    db.collection("weddingDrinkPhotos").orderBy("createdAt","desc").limit(120).onSnapshot(function(snap){
+  // The gallery only starts listening once someone opens the Photos (or Admin)
+  // tab, so guests who never look at photos don't spend reads on them.
+  var photosWatching = false, photosLoaded = false;
+  function watchPhotos(){
+    if(!firebaseReady || photosWatching) return;
+    photosWatching = true;
+    db.collection("weddingDrinkPhotos").orderBy("createdAt","desc").limit(300).onSnapshot(function(snap){
       photos = [];
       snap.forEach(function(doc){ photos.push(Object.assign({id:doc.id}, doc.data())); });
+      photosLoaded = true;
       renderPhotoGallery();
-    }, function(err){ console.error(err); });
+    }, function(err){ console.error(err); photosWatching = false; });
   }
 
   function renderPhotoGallery(){
     var grid = $("photoGrid");
+    if(!photosLoaded){
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Loading photos…</div>';
+      return;
+    }
     // Admins also see hidden photos (dimmed) so they can delete them.
     var visible = photos.filter(function(p){
       return isImageDataUrl(p.thumb) && (adminUnlocked || p.hidden !== true);
@@ -1467,6 +1496,33 @@
       showToast("Photo deleted.");
     }).catch(function(e){ console.error(e); showToast("Couldn't delete that photo."); });
   }
+
+  // Delete all photos: same two steps as deleting one (hide with the passcode,
+  // then delete), for every photo and its full-size copy.
+  $("purgePhotosBtn").addEventListener("click", function(){
+    if(!firebaseReady) return;
+    db.collection("weddingDrinkPhotos").get().then(function(snap){
+      if(snap.empty){ showToast("There are no photos to delete."); return; }
+      var typed = prompt("This permanently deletes ALL " + snap.size + " photo(s) from the gallery and the database, for everyone. It can't be undone. Type DELETE to confirm.");
+      if(typed !== "DELETE"){
+        if(typed !== null) showToast("Cancelled — text didn't match.");
+        return;
+      }
+      showToast("Deleting photos...");
+      var full = db.collection("weddingDrinkPhotoFull");
+      var mark = [], del = [];
+      snap.forEach(function(doc){
+        if(doc.data().hidden !== true){
+          mark.push(function(b){ b.update(doc.ref, { hidden: true, code: WEDDING_CODE }); });
+        }
+        // Both copies go in one slice: the full copy's delete rule checks its photo is hidden.
+        del.push(function(b){ b.delete(doc.ref); b.delete(full.doc(doc.id)); });
+      });
+      return commitInChunks(mark).then(function(){ return commitInChunks(del, 200); }).then(function(){
+        showToast("Deleted " + snap.size + " photo(s).");
+      });
+    }).catch(function(e){ console.error(e); showToast("Couldn't delete all photos — check your connection and run it again."); });
+  });
 
   function openLightbox(id){
     var p = photos.find(function(x){ return x.id === id; });
@@ -2003,16 +2059,17 @@
   }
 
   // Firestore batches are capped at 500 writes, so big purges run in slices.
-  function commitInChunks(ops){
+  function commitInChunks(ops, sliceSize){
+    sliceSize = sliceSize || 400;
     var chain = Promise.resolve();
-    for(var i = 0; i < ops.length; i += 400){
+    for(var i = 0; i < ops.length; i += sliceSize){
       (function(slice){
         chain = chain.then(function(){
           var batch = db.batch();
           slice.forEach(function(op){ op(batch); });
           return batch.commit();
         });
-      })(ops.slice(i, i + 400));
+      })(ops.slice(i, i + sliceSize));
     }
     return chain;
   }
