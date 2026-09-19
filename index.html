@@ -230,6 +230,15 @@
   #shareModal .share-save{flex:1;background:var(--cream);}
   #shareModal .lb-cap{color:var(--peach);font-style:italic;margin-top:12px;font-size:.95rem;text-align:center;max-width:320px;}
   /* Water check */
+  #photoPrompt{position:fixed;inset:0;background:rgba(60,44,34,.6);z-index:270;display:none;align-items:center;justify-content:center;padding:24px;overflow:auto;}
+  #photoPrompt.show{display:flex;}
+  #photoPrompt .nudge-box{background:var(--white);border:1px solid var(--peach);border-radius:var(--radius);padding:24px 22px;max-width:340px;width:100%;text-align:center;}
+  #photoPrompt img{display:block;max-width:100%;max-height:34vh;margin:0 auto 14px;border-radius:4px;border:1px solid var(--peach);object-fit:contain;}
+  #photoPrompt h2{font-size:1.3rem;letter-spacing:3px;color:var(--taupe);margin:0 0 8px;}
+  #photoPrompt p{color:var(--ink);font-style:italic;font-size:1.12rem;margin:0 0 6px;line-height:1.35;}
+  #photoPrompt .photo-prompt-count{color:var(--muted);font-size:.9rem;font-style:italic;min-height:1em;}
+  #photoPrompt .photo-prompt-actions{display:flex;gap:10px;margin-top:16px;}
+  #photoPrompt .photo-prompt-actions button{flex:1;margin:0;width:auto;}
   #waterNudge{position:fixed;inset:0;background:rgba(60,44,34,.55);z-index:260;display:none;align-items:center;justify-content:center;padding:24px;}
   #waterNudge.show{display:flex;}
   #waterNudge .nudge-box{background:var(--white);border:1px solid var(--peach);border-radius:var(--radius);padding:28px 24px;max-width:340px;width:100%;text-align:center;}
@@ -489,6 +498,19 @@
     <button class="btn-secondary share-save" id="shareSaveBtn">Save image</button>
   </div>
   <div class="lb-cap" id="shareCap">On a phone you can also press and hold the image to save it.</div>
+</div>
+
+<div id="photoPrompt">
+  <div class="nudge-box">
+    <img id="photoPromptImg" alt="Your photo">
+    <h2>Photo check</h2>
+    <p id="photoPromptMsg"></p>
+    <div class="photo-prompt-count" id="photoPromptCount"></div>
+    <div class="photo-prompt-actions">
+      <button class="btn-secondary" id="photoPromptNo">Never mind</button>
+      <button class="btn-primary" id="photoPromptYes">Post it</button>
+    </div>
+  </div>
 </div>
 
 <div id="waterNudge">
@@ -1247,7 +1269,56 @@
       showToast("Taking the first " + MAX_PHOTOS_PER_PICK + " photos.");
       files = files.slice(0, MAX_PHOTOS_PER_PICK);
     }
-    uploadPhotos(files);
+    askBeforePosting(files);
+  });
+
+  // ---- "Would your grandparents see this?" check, shown before anything is uploaded ----
+  var GRANDPARENT_LINES = [
+    "Would you want your grandparents to see this?",
+    "Quick check: does this pass the Grandma test?",
+    "Imagine Lydia's grandmother scrolling the gallery. Still good to post?",
+    "Would you be fine with this on the big screen at the reception?",
+    "Would you show this to your boss on Monday morning?",
+    "Would your mom frame this one?",
+    "Would you be okay with the whole family seeing this at Thanksgiving?",
+    "Pause. Would Nana approve?",
+    "Everyone at the wedding can see this. Are you good with that?",
+    "Would you hand this photo to the officiant?",
+    "Would this look right next to the wedding album?",
+    "If your grandpa saw this over your shoulder, would you be fine?"
+  ];
+  var lastGrandparentLine = -1;
+  var pendingPhotos = null, pendingPreviewUrl = null;
+
+  function askBeforePosting(files){
+    var i;
+    do { i = Math.floor(Math.random() * GRANDPARENT_LINES.length); } while(i === lastGrandparentLine && GRANDPARENT_LINES.length > 1);
+    lastGrandparentLine = i;
+    pendingPhotos = files;
+    $("photoPromptMsg").textContent = GRANDPARENT_LINES[i];
+    $("photoPromptCount").textContent = files.length === 1 ? "" : "Posting " + files.length + " photos";
+    var img = $("photoPromptImg");
+    if(pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    pendingPreviewUrl = URL.createObjectURL(files[0]);
+    img.style.display = "";
+    img.onerror = function(){ img.style.display = "none"; };
+    img.src = pendingPreviewUrl;
+    $("photoPrompt").classList.add("show");
+  }
+  function closePhotoPrompt(){
+    $("photoPrompt").classList.remove("show");
+    $("photoPromptImg").removeAttribute("src");
+    if(pendingPreviewUrl){ URL.revokeObjectURL(pendingPreviewUrl); pendingPreviewUrl = null; }
+  }
+  $("photoPromptYes").addEventListener("click", function(){
+    var files = pendingPhotos; pendingPhotos = null;
+    closePhotoPrompt();
+    if(files && files.length) uploadPhotos(files);
+  });
+  $("photoPromptNo").addEventListener("click", function(){
+    pendingPhotos = null;
+    closePhotoPrompt();
+    showToast("No worries, nothing was posted.");
   });
 
   // ---- Photo screening ----

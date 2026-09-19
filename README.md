@@ -42,6 +42,11 @@ guests open on their phone.
   10 at a time). Photos are shrunk on the phone and stored in Firestore, so
   no paid Storage plan is needed. Tap a photo to view it larger; admins can
   permanently delete any photo (Admin is the small link under the footer).
+- **Grandparent check** — after picking photos, and before anything uploads, a
+  "Photo check" popup shows the photo with one of 12 rotating prompts ("Would you
+  want your grandparents to see this?", "Pause. Would Nana approve?", ...) and
+  Post it / Never mind buttons. Edit `GRANDPARENT_LINES` in `index.html` to add
+  your own.
 - **Photo screening** — every photo, whether taken with the camera or picked
   from the library, is checked on the guest's phone by an open-source model
   ([NSFW.js](https://github.com/infinitered/nsfwjs), self-hosted in `vendor/nsfw/`)
