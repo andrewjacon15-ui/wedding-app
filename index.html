@@ -1092,8 +1092,10 @@
   cooldownTicker = setInterval(updateCooldownUI, 1000);
 
   function renderMyStats(){
-    var totalMl = myGuestDoc ? (myGuestDoc.totalMl||0) : 0;
-    var count = myGuestDoc ? (myGuestDoc.drinkCount||0) : 0;
+    // A removed/purged guest (archived) counts as having nothing logged.
+    var me = (myGuestDoc && myGuestDoc.archived !== true) ? myGuestDoc : null;
+    var totalMl = me ? (me.totalMl||0) : 0;
+    var count = me ? (me.drinkCount||0) : 0;
     if(unitMode==="oz"){
       $("myTotalBig").textContent = fmtNum(mlToOz(totalMl));
       $("myTotalUnit").textContent = "fl oz consumed";
@@ -1102,7 +1104,8 @@
       $("myTotalUnit").textContent = "mL consumed";
     }
     $("myDrinkCount").textContent = count;
-    var rankIdx = allGuests.findIndex(function(g){ return g.id === guestId; });
+    // Rank among the guests actually on the leaderboard (not archived, with drinks).
+    var rankIdx = activeRankedGuests().findIndex(function(g){ return g.id === guestId; });
     $("myRank").textContent = (rankIdx >= 0) ? ("#" + (rankIdx+1)) : "—";
   }
 
@@ -1999,18 +2002,64 @@
     }).catch(function(e){ console.error(e); showToast("Couldn't remove — check your connection."); });
   }
 
+  // Firestore batches are capped at 500 writes, so big purges run in slices.
+  function commitInChunks(ops){
+    var chain = Promise.resolve();
+    for(var i = 0; i < ops.length; i += 400){
+      (function(slice){
+        chain = chain.then(function(){
+          var batch = db.batch();
+          slice.forEach(function(op){ op(batch); });
+          return batch.commit();
+        });
+      })(ops.slice(i, i + 400));
+    }
+    return chain;
+  }
+
+  // Purge all really deletes: every guest record (including ones removed
+  // earlier), every drink in the log, and every note. The rules only allow
+  // deleting records that were first marked archived / purged with the
+  // passcode, so it is two steps: mark, then delete. Photos are not touched.
   $("purgeAllBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
-    var targets = allGuests.filter(function(g){ return g.archived !== true; });
-    if(!targets.length){ showToast("Nothing to purge — the leaderboard's already empty."); return; }
-    var typed = prompt("This wipes ALL " + targets.length + " guest(s) — every drink and total, gone from the leaderboard. Type PURGE to confirm.");
-    if(typed !== "PURGE"){
-      if(typed !== null) showToast("Purge cancelled — text didn't match.");
-      return;
-    }
-    Promise.all(targets.map(function(g){ return archiveGuest(g.id); })).then(function(){
-      showToast("Purged " + targets.length + " guest(s).");
-    }).catch(function(e){ console.error(e); showToast("Purge partially failed — check your connection and try again."); });
+    db.collection("weddingDrinkLog").get().then(function(logSnap){
+      var guests = allGuests.slice();
+      if(!guests.length && logSnap.empty){ showToast("Nothing to purge — the leaderboard's already empty."); return; }
+      var active = guests.filter(function(g){ return g.archived !== true; }).length;
+      var typed = prompt("This permanently deletes ALL guests (" + active + " on the leaderboard now), every drink, every total and every note. Photos are kept. It can't be undone. Type PURGE to confirm.");
+      if(typed !== "PURGE"){
+        if(typed !== null) showToast("Purge cancelled — text didn't match.");
+        return;
+      }
+      showToast("Purging...");
+      var guestsCol = db.collection("weddingDrinkGuests");
+      var mark = [], del = [];
+      guests.forEach(function(g){
+        if(g.archived !== true){
+          mark.push(function(b){
+            b.set(guestsCol.doc(g.id), {
+              totalMl: 0, drinkCount: 0,
+              byItem: firebase.firestore.FieldValue.delete(),
+              archived: true, code: WEDDING_CODE,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, {merge:true});
+          });
+        }
+        del.push(function(b){ b.delete(guestsCol.doc(g.id)); });
+      });
+      logSnap.forEach(function(doc){
+        if(doc.data().purged !== true){
+          mark.push(function(b){ b.update(doc.ref, { voided: true, purged: true, code: WEDDING_CODE }); });
+        }
+        del.push(function(b){ b.delete(doc.ref); });
+      });
+      return commitInChunks(mark).then(function(){ return commitInChunks(del); }).then(function(){
+        optimisticLastDrinkAt = 0;
+        updateCooldownUI();
+        showToast("Purged: " + guests.length + " guest record(s) and " + logSnap.size + " log entries deleted.");
+      });
+    }).catch(function(e){ console.error(e); showToast("Purge didn't finish — check your connection and run it again."); });
   });
 
   function renderAdminGuestList(){

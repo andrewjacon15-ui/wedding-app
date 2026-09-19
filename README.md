@@ -62,10 +62,12 @@ guests open on their phone.
   headings, and Crimson Text body copy, to look like part of the same site.
 - **Admin tab** — passcode-gated menu, event-title, and guest management,
   right from a phone. No app install or deploy step needed to curate the bar.
-- **Purge / remove guests** — wipe the whole leaderboard before the big day,
-  or remove one guest at a time. Soft-delete under the hood (see below), so a
-  removed guest's history isn't destroyed — they just drop off the board
-  until they log another drink, at which point they reappear starting fresh.
+- **Purge / remove guests** — "Purge all" permanently deletes every guest, drink,
+  total and note (photos are kept), so the leaderboard, ranks and cooldowns
+  start truly fresh. It asks you to type PURGE first and can't be undone. To
+  remove just one guest instead, use Remove next to their name: that one is a
+  soft delete, so their history isn't destroyed and they reappear starting
+  fresh if they log another drink.
 - **Mobile-first** — big tap targets, a five-tab bottom bar (Admin lives in a
   small footer link so the bar never feels cramped), works great added to a
   phone's home screen.

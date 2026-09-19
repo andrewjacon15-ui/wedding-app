@@ -29,9 +29,13 @@ rules_version = '2';
 //     bloat the database.
 //   - Photos can be hard-deleted only after being hidden (hiding needs the code).
 //   - Optional drink notes are capped at 140 chars; hiding one is admin-only.
-//   - Every other hard delete is blocked entirely. "Undo" a drink and admin "Remove"/"Purge"
-//     both work by marking things (voided / archived) rather than deleting them --
-//     removed guests reappear automatically (unarchived) if they log a new drink.
+//   - "Purge all guests & drinks" really deletes: it first marks every guest archived and
+//     every drink purged (both need the passcode), then deletes them. A guest doc can only
+//     be deleted once archived, and a drink only once purged, so a delete can't be used
+//     without the passcode. Every other hard delete is blocked entirely.
+//   - "Undo" a drink and admin "Remove" (one guest) just mark things (voided / archived)
+//     rather than deleting them -- a removed guest reappears automatically (unarchived)
+//     if they log a new drink.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -61,7 +65,10 @@ service cloud.firestore {
                    && request.resource.data.drinkCount >= 0
                    && (request.resource.data.get('archived', false) != true
                        || request.resource.data.code == "cheers2026");
-      allow delete: if false;
+      // Delete requests carry no data, so the passcode can't be checked here.
+      // Instead a guest can only be deleted once archived, and archiving
+      // requires the passcode (see the rule above).
+      allow delete: if resource.data.get('archived', false) == true;
     }
 
     match /weddingDrinkPhotos/{photoId} {
@@ -103,8 +110,12 @@ service cloud.firestore {
                    .hasOnly(["voided"])
                    || (request.resource.data.diff(resource.data).affectedKeys()
                        .hasOnly(["messageHidden", "code"])
+                       && request.resource.data.code == "cheers2026")
+                   // Purge all: mark a drink purged (passcode needed) before it can be deleted.
+                   || (request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(["voided", "purged", "code"])
                        && request.resource.data.code == "cheers2026");
-      allow delete: if false;
+      allow delete: if resource.data.get('purged', false) == true;
     }
   }
 }
