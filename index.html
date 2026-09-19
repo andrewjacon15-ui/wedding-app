@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#FFFAF5">
-<title>Andrew & Lydia · Wedding</title>
+<title>Andrew & Lydia · Wedding Weekend</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥂</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -206,7 +206,7 @@
   .feed-item .btn-ghost{color:var(--danger);text-decoration:none;font-size:.9rem;}
   /* Agenda */
   .agenda-sub{text-align:center;color:var(--muted);font-style:italic;margin:-6px 0 6px;}
-  .agenda-link{text-align:center;margin:0 0 4px;}
+  .agenda-link{text-align:center;margin:0 0 14px;}
   .agenda-link a{color:var(--taupe);font-family:var(--display);text-transform:uppercase;letter-spacing:2px;font-size:.8rem;text-decoration:underline;text-underline-offset:4px;}
   .agenda-group{font-family:var(--display);text-transform:uppercase;letter-spacing:3px;font-size:.9rem;color:var(--taupe);text-align:center;margin:26px 0 6px;padding-bottom:8px;border-bottom:1px solid var(--peach);}
   .agenda-row{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--peach-light);}
@@ -216,13 +216,13 @@
   .agenda-row .ad strong{display:block;font-weight:600;font-size:1.08rem;color:var(--taupe-dark);}
   .agenda-row .ad span{display:block;font-style:italic;color:var(--muted);font-size:.95rem;margin-top:2px;}
   .agenda-note{text-align:center;font-style:italic;color:var(--taupe);margin-top:22px;padding-top:16px;border-top:1px solid var(--peach);}
-  /* Drink of the Night */
+  /* Drink of the Weekend */
   .don{text-align:center;padding:4px 0 2px;}
   .don .don-emoji{font-size:2.6rem;line-height:1;}
   .don .don-name{font-family:var(--display);text-transform:uppercase;letter-spacing:3px;font-size:1.5rem;color:var(--taupe);margin-top:8px;}
   .don .don-count{color:var(--muted);font-style:italic;font-size:1.05rem;margin-top:4px;}
   .don .don-runners{margin-top:12px;padding-top:10px;border-top:1px solid var(--peach-light);color:var(--muted);font-size:.95rem;font-style:italic;}
-  /* Share my night */
+  /* Share my weekend */
   #shareModal{position:fixed;inset:0;background:rgba(40,28,20,.94);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow:auto;}
   #shareModal.show{display:flex;}
   #shareModal .lb-close{position:absolute;top:14px;right:16px;background:none;color:var(--cream);font-size:2rem;line-height:1;padding:6px 12px;}
@@ -286,7 +286,7 @@
 
 <div id="nameGate">
   <div class="box">
-    <div class="eyebrow">November 7, 2026</div>
+    <div class="eyebrow">November 6&ndash;7, 2026</div>
     <h1>Welcome</h1>
     <p>Enter your name to join in: log drinks, share photos, and more.</p>
     <input type="text" id="gateNameInput" placeholder="Your first name" maxlength="30" autocomplete="off">
@@ -297,8 +297,8 @@
 <div class="app-body" id="appBody">
   <header class="app-header">
     <h1 id="eventTitle">Andrew &amp; Lydia</h1>
-    <div class="dateline">November 7, 2026<br>Clarkesville, Georgia</div>
-    <div class="sub" id="eventSubtitle">Welcome to our wedding celebration</div>
+    <div class="dateline">November 6&ndash;7, 2026<br>Clarkesville, Georgia</div>
+    <div class="sub" id="eventSubtitle">Welcome to our wedding weekend</div>
     <div class="guest-chip" id="guestChip" title="Tap to change your name"><span id="guestChipName">—</span></div>
     <div class="divider"></div>
   </header>
@@ -338,7 +338,7 @@
             <div class="stat-box"><div class="n" id="myDrinkCount">0</div><div class="l">Drinks logged</div></div>
             <div class="stat-box"><div class="n" id="myRank">—</div><div class="l">Leaderboard rank</div></div>
           </div>
-          <button class="btn-primary" id="shareStatsBtn">Share my night</button>
+          <button class="btn-primary" id="shareStatsBtn">Share my weekend</button>
           <div class="export-hint" style="margin:10px 0 0;">Makes a story-sized image you can post to Instagram.</div>
         </div>
         <div class="card">
@@ -348,10 +348,10 @@
       </section>
 
       <section class="tab-panel" id="tab-agenda">
+        <div class="agenda-link"><a href="https://www.theknot.com/us/andrew-jacon-and-lydia-koenig-nov-2026" target="_blank" rel="noopener">Visit our wedding website &rarr;</a></div>
         <div class="card">
-          <div class="section-title">Order of the Day</div>
+          <div class="section-title">Order of the Weekend</div>
           <div class="agenda-sub">November 6&ndash;7, 2026 &middot; Clarkesville, Georgia</div>
-          <div class="agenda-link"><a href="https://www.theknot.com/us/andrew-jacon-and-lydia-koenig-nov-2026" target="_blank" rel="noopener">Visit our wedding website &rarr;</a></div>
 
           <div class="agenda-group">Friday, Nov 6 &middot; Welcome Party</div>
           <div class="agenda-row"><div class="at">7:00 &ndash; 10:00 PM</div><div class="ad"><strong>Welcome party</strong></div></div>
@@ -381,7 +381,7 @@
 
       <section class="tab-panel" id="tab-leaderboard">
         <div class="card" id="drinkOfNightCard" style="display:none;">
-          <div class="section-title">Drink of the Night</div>
+          <div class="section-title">Drink of the Weekend</div>
           <div id="drinkOfNight"></div>
         </div>
         <div class="card">
@@ -422,7 +422,7 @@
             <label class="small">Event title</label>
             <input type="text" id="settingsTitle" placeholder="Andrew &amp; Lydia" style="margin-bottom:10px;">
             <label class="small">Subtitle</label>
-            <input type="text" id="settingsSubtitle" placeholder="Welcome to our wedding celebration">
+            <input type="text" id="settingsSubtitle" placeholder="Welcome to our wedding weekend">
             <button class="btn-primary" id="saveSettingsBtn">Save settings</button>
           </div>
 
@@ -499,7 +499,7 @@
 
 <div id="shareModal">
   <button class="lb-close" id="shareClose" aria-label="Close">&times;</button>
-  <img id="shareImg" alt="Your night, ready to share">
+  <img id="shareImg" alt="Your weekend, ready to share">
   <div class="share-actions">
     <button class="btn-primary" id="shareNativeBtn">Share</button>
     <button class="btn-secondary share-save" id="shareSaveBtn">Save image</button>
@@ -844,7 +844,7 @@
   // ==========================================================
   // Settings
   // ==========================================================
-  var currentSettings = { title:"Andrew & Lydia", subtitle:"Welcome to our wedding celebration" };
+  var currentSettings = { title:"Andrew & Lydia", subtitle:"Welcome to our wedding weekend" };
   if(firebaseReady){
     db.collection("weddingDrinkSettings").doc("config").onSnapshot(function(doc){
       if(doc.exists){
@@ -1707,7 +1707,7 @@
       ctx.fillStyle = TAUPE; ctx.font = '84px "Amarante", Georgia, serif';
       drawSpaced(ctx, "ANDREW & LYDIA", W / 2, 180, 8);
       ctx.font = '600 30px "Crimson Text", Georgia, serif'; ctx.fillStyle = TAUPE;
-      drawSpaced(ctx, "NOVEMBER 7, 2026  •  CLARKESVILLE, GEORGIA", W / 2, 238, 3);
+      drawSpaced(ctx, "NOVEMBER 6–7, 2026  •  CLARKESVILLE, GEORGIA", W / 2, 238, 3);
       ctx.fillStyle = "#b08a6b"; ctx.fillRect(W / 2 - 60, 274, 120, 2);
 
       if(imgs.length){
@@ -1750,7 +1750,7 @@
       var counts = getDrinkCounts();
       y += 40;
       ctx.fillStyle = TAUPE; ctx.font = '32px "Amarante", Georgia, serif';
-      drawSpaced(ctx, "DRINK OF THE NIGHT", W / 2, y, 5);
+      drawSpaced(ctx, "DRINK OF THE WEEKEND", W / 2, y, 5);
       if(counts.length){
         var topN = counts[0].count, tied = counts.filter(function(x){ return x.count === topN; });
         ctx.font = '84px serif'; ctx.fillStyle = DARK;
@@ -1883,11 +1883,11 @@
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
       // Header (kept below Instagram's top bar)
       ctx.fillStyle = TAUPE; ctx.font = '70px ' + DISPLAY; drawSpaced(ctx, "ANDREW & LYDIA", W / 2, 350, 8);
-      ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "NOVEMBER 7, 2026", W / 2, 406, 5);
+      ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "NOVEMBER 6–7, 2026", W / 2, 406, 5);
 
       ctx.font = '150px serif'; ctx.fillStyle = DARK; ctx.fillText("🥂", W / 2, 590);
 
-      var nm = (s.name.toUpperCase() + "'S NIGHT");
+      var nm = (s.name.toUpperCase() + "'S WEEKEND");
       ctx.fillStyle = TAUPE; fitText(ctx, nm, '{px}px ' + DISPLAY, 66, 880);
       ctx.fillText(nm, W / 2, 700);
       ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - 70, 736, 140, 3);
@@ -1915,7 +1915,7 @@
       });
 
       // Title badge
-      ctx.fillStyle = MUTED; ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "TONIGHT'S TITLE", W / 2, 1400, 6);
+      ctx.fillStyle = MUTED; ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "WEEKEND TITLE", W / 2, 1400, 6);
       ctx.fillStyle = DARK; fitText(ctx, s.title.toUpperCase(), '{px}px ' + DISPLAY, 68, 880);
       ctx.fillText(s.title.toUpperCase(), W / 2, 1478);
 
@@ -1946,12 +1946,12 @@
   $("shareClose").addEventListener("click", closeShareModal);
   $("shareModal").addEventListener("click", function(e){ if(e.target === $("shareModal")) closeShareModal(); });
   $("shareSaveBtn").addEventListener("click", function(){
-    if(shareBlob) downloadBlob("my-night-andrew-lydia.png", shareBlob);
+    if(shareBlob) downloadBlob("my-weekend-andrew-lydia.png", shareBlob);
   });
   $("shareNativeBtn").addEventListener("click", function(){
     if(!shareBlob) return;
-    var file = new File([shareBlob], "my-night-andrew-lydia.png", {type: "image/png"});
-    navigator.share({ files: [file], title: "My night at Andrew & Lydia's wedding" }).catch(function(){});
+    var file = new File([shareBlob], "my-weekend-andrew-lydia.png", {type: "image/png"});
+    navigator.share({ files: [file], title: "My weekend at Andrew & Lydia's wedding" }).catch(function(){});
   });
 
   $("shareStatsBtn").addEventListener("click", function(){

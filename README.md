@@ -1,6 +1,6 @@
-# Andrew & Lydia — Wedding App
+# Andrew & Lydia — Wedding Weekend App
 
-A mobile-friendly web app for our wedding guests. Right now it includes a
+A mobile-friendly web app for our wedding weekend (November 6–7, 2026). Right now it includes a
 drink tracker (log drinks from the curated bar menu, see your total, and check
 a live leaderboard), optional notes with each drink, and a shared photo
 gallery, with room to add more. No app install required: it's a website
@@ -16,16 +16,16 @@ guests open on their phone.
   live countdown until the next one unlocks. Undoing a mis-tap clears it
   immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
-- **Share my night** — every guest can turn their stats into a cute
+- **Share my weekend** — every guest can turn their stats into a cute
   story-sized image (1080x1920) with their total, rank, a fun title like "Hop
   Head" or "Hydration Hero", and their signature drink. On phones it opens the
   share sheet (straight to Instagram Stories); elsewhere it saves the image.
 - **Leaderboard** — everyone's total liquid volume, ranked live, with a
-  **Drink of the Night** card showing the most-logged drink and how many.
+  **Drink of the Weekend** card showing the most-logged drink and how many.
 - **Water check** — after every 3rd drink a guest logs, a cheeky "Water check?"
   reminder pops up (skipped when the drink was non-alcoholic).
-- **Agenda tab** — the Friday welcome party and Saturday order of the day, a link to the wedding website, shuttle times, and a note that
-  rideshare doesn't operate in the county. Edit the times directly in `index.html` (search for "Order of the Day").
+- **Agenda tab** — a link to the wedding website, the Friday welcome party, the Saturday order of the day, shuttle times, and a note that
+  rideshare doesn't operate in the county. Edit the times directly in `index.html` (search for "Order of the Weekend").
 - **Export & share (Admin)** — download the final stats, all notes, or the
   complete drink log as CSV, or a shareable results card image (top 5,
   Drink of the Night, totals, and your latest photos).
