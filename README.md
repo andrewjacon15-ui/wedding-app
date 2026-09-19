@@ -24,7 +24,7 @@ guests open on their phone.
   **Drink of the Night** card showing the most-logged drink and how many.
 - **Water check** — after every 3rd drink a guest logs, a cheeky "Water check?"
   reminder pops up (skipped when the drink was non-alcoholic).
-- **Agenda tab** — the order of the day, shuttle times, and a note that
+- **Agenda tab** — the Friday welcome party and Saturday order of the day, a link to the wedding website, shuttle times, and a note that
   rideshare doesn't operate in the county. Edit the times directly in `index.html` (search for "Order of the Day").
 - **Export & share (Admin)** — download the final stats, all notes, or the
   complete drink log as CSV, or a shareable results card image (top 5,
