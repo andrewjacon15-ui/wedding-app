@@ -113,17 +113,32 @@
   .tab-panel.active{display:block;animation:fadein .18s ease;}
   @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
   /* Drink grid */
-  .drink-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .drink-grid{display:block;}
+  .menu-chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 14px;}
+  .menu-chip{
+    flex:0 0 auto;padding:8px 16px;border:1px solid var(--peach);border-radius:999px;
+    background:var(--cream);color:var(--taupe-dark);-webkit-text-fill-color:var(--taupe-dark);
+    font-size:.95rem;font-weight:600;white-space:nowrap;
+  }
+  .menu-chip.active{background:var(--taupe);border-color:var(--taupe);color:var(--cream);-webkit-text-fill-color:var(--cream);}
+  .drink-group{margin-bottom:16px;}
+  .drink-group:last-child{margin-bottom:0;}
+  .group-title{
+    font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);-webkit-text-fill-color:var(--muted);margin:0 2px 8px;
+  }
+  .drink-list{display:flex;flex-direction:column;gap:8px;}
   .drink-btn{
-    background:var(--cream);border:1px solid var(--peach);border-radius:var(--radius);
-    padding:16px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink);
+    width:100%;min-height:56px;background:var(--cream);border:1px solid var(--peach);border-radius:var(--radius);
+    padding:10px 14px;text-align:left;display:flex;flex-direction:row;align-items:center;gap:12px;color:var(--ink);
     transition:transform .08s,background .15s,border-color .15s;
   }
-  .drink-btn:active{transform:scale(0.97);background:var(--peach-light);border-color:var(--taupe);}
-  .drink-btn .emoji{font-size:1.7rem;}
+  .drink-btn:active{transform:scale(0.98);background:var(--peach-light);border-color:var(--taupe);}
+  .drink-btn .emoji{font-size:1.55rem;width:1.9rem;text-align:center;flex:0 0 auto;}
+  .drink-btn .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
   .drink-btn .name{font-weight:600;font-size:1.05rem;line-height:1.2;color:var(--taupe-dark);-webkit-text-fill-color:var(--taupe-dark);}
-  .drink-btn .vol{font-size:.9rem;color:var(--muted);-webkit-text-fill-color:var(--muted);font-style:italic;}
-  .drink-btn .detail{font-size:.78rem;line-height:1.25;color:var(--muted);-webkit-text-fill-color:var(--muted);}
+  .drink-btn .detail{font-size:.82rem;line-height:1.25;color:var(--muted);-webkit-text-fill-color:var(--muted);}
+  .drink-btn .vol{flex:0 0 auto;font-size:.88rem;color:var(--muted);-webkit-text-fill-color:var(--muted);font-style:italic;}
   .empty-state{text-align:center;color:var(--muted);font-style:italic;padding:30px 10px;font-size:1rem;}
   .cooldown-banner{
     background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);
@@ -318,6 +333,7 @@
             <input type="text" id="drinkNote" maxlength="140" placeholder="Add a note with your next drink (optional)" autocomplete="off">
             <span class="note-count" id="drinkNoteCount"></span>
           </div>
+          <div class="menu-chips" id="menuChips"></div>
           <div class="drink-grid" id="menuGrid">
             <div class="empty-state">Loading the bar menu…</div>
           </div>
@@ -556,6 +572,7 @@
     {name:"Creature Comforts Tropicália", emoji:"🍺", oz:12, category:"Beer", detail:"IPA"},
     {name:"SweetWater 420", emoji:"🍺", oz:12, category:"Beer", detail:"Extra pale ale"},
     {name:"Spotted Cow", emoji:"🍺", oz:12, category:"Beer", detail:"Farmhouse ale"},
+    {name:"Juice Packet", emoji:"🧃", oz:16, category:"Beer", detail:"Fermentorium"},
     {name:"Sauvignon Blanc", emoji:"🥂", oz:7, category:"Wine", detail:"White wine"},
     {name:"Pinot Grigio", emoji:"🥂", oz:7, category:"Wine", detail:"White wine"},
     {name:"Chardonnay", emoji:"🥂", oz:7, category:"Wine", detail:"White wine"},
@@ -565,8 +582,7 @@
     {name:"Hard Seltzer", emoji:"🥤", oz:12, category:"Seltzer", detail:"White Claw · High Noon"},
     {name:"Sun Cruisers", emoji:"🍹", oz:12, category:"Cocktail", detail:"Variety pack"},
     {name:"Hard Cider", emoji:"🍎", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
-    {name:"Juice Packet", emoji:"🧃", oz:16, category:"Cocktail", detail:"Fermentorium"},
-    {name:"Non-Alcoholic", emoji:"🍃", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · TÖST"}
+    {name:"N/A Beer & TÖST", emoji:"🍃", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · TÖST"}
   ];
 
   var db = null;
@@ -895,25 +911,86 @@
     }, function(err){ console.error(err); markWriteError(); });
   }
 
+  // Drinks are grouped by category so a long bar menu stays scannable.
+  var MENU_GROUPS = ["Beer", "Wine", "Cans & Cocktails", "Non-Alcoholic", "Other"];
+  function menuGroupOf(m){
+    var c = m.category || "";
+    if(c === "Beer") return "Beer";
+    if(c === "Wine" || c === "Champagne") return "Wine";
+    if(c === "Seltzer" || c === "Cider" || c === "Cocktail" || c === "Shot") return "Cans & Cocktails";
+    if(c === "Non-Alcoholic") return "Non-Alcoholic";
+    return "Other";
+  }
+  var menuFilter = "all";
+  var lastMenuHtml = "";
+  var lastChipsHtml = "";
+
+  function drinkRowHtml(m){
+    return '<button class="drink-btn" data-item="'+m.id+'">'+
+      '<span class="emoji">'+escapeHtml(m.emoji||'🥂')+'</span>'+
+      '<span class="txt"><span class="name">'+escapeHtml(m.name)+'</span>'+
+      (m.detail ? '<span class="detail">'+escapeHtml(m.detail)+'</span>' : '')+'</span>'+
+      '<span class="vol">'+fmtNum(mlToOz(m.volumeMl))+' oz</span>'+
+      '</button>';
+  }
+  // The drinks this guest has logged at least twice, most-logged first.
+  function usualItems(active){
+    var me = (myGuestDoc && myGuestDoc.archived !== true) ? myGuestDoc : null;
+    var by = (me && me.byItem) || {};
+    return active.map(function(m){ return {m: m, n: Number(by[m.id]) || 0}; })
+      .filter(function(e){ return e.n >= 2; })
+      .sort(function(a, b){ return b.n - a.n; })
+      .slice(0, 3)
+      .map(function(e){ return e.m; });
+  }
+
   function renderMenuGrid(){
     var active = menuItems.filter(function(m){ return m.active !== false; });
-    var grid = $("menuGrid");
+    var grid = $("menuGrid"), chips = $("menuChips");
     if(!active.length){
+      chips.innerHTML = ""; lastChipsHtml = "";
       grid.innerHTML = '<div class="empty-state">The bar menu is empty. Ask an admin to add some drinks! 🍸</div>';
+      lastMenuHtml = "";
       return;
     }
-    grid.innerHTML = active.map(function(m){
-      return '<button class="drink-btn" data-item="'+m.id+'">'+
-        '<span class="emoji">'+escapeHtml(m.emoji||'🥂')+'</span>'+
-        '<span class="name">'+escapeHtml(m.name)+'</span>'+
-        '<span class="vol">'+fmtNum(mlToOz(m.volumeMl))+' oz</span>'+
-        (m.detail ? '<span class="detail">'+escapeHtml(m.detail)+'</span>' : '')+
-        '</button>';
-    }).join("");
-    grid.querySelectorAll(".drink-btn").forEach(function(btn){
-      btn.addEventListener("click", function(){ logDrink(btn.dataset.item); });
+    var groups = {};
+    MENU_GROUPS.forEach(function(g){ groups[g] = []; });
+    active.forEach(function(m){ groups[menuGroupOf(m)].push(m); });
+    var present = MENU_GROUPS.filter(function(g){ return groups[g].length > 0; });
+    if(menuFilter !== "all" && present.indexOf(menuFilter) < 0) menuFilter = "all";
+
+    var chipsHtml = present.length > 1 ? ["all"].concat(present).map(function(g){
+      return '<button class="menu-chip'+(g === menuFilter ? ' active' : '')+'" data-group="'+escapeHtml(g)+'">'+
+        (g === "all" ? "All" : escapeHtml(g))+'</button>';
+    }).join("") : "";
+    if(chipsHtml !== lastChipsHtml){ chips.innerHTML = chipsHtml; lastChipsHtml = chipsHtml; }
+
+    var html = "";
+    if(menuFilter === "all"){
+      var usual = usualItems(active);
+      if(usual.length){
+        html += '<div class="drink-group"><div class="group-title">Your usual</div><div class="drink-list">'+
+          usual.map(drinkRowHtml).join("")+'</div></div>';
+      }
+    }
+    present.forEach(function(g){
+      if(menuFilter !== "all" && g !== menuFilter) return;
+      html += '<div class="drink-group"><div class="group-title">'+escapeHtml(g)+'</div><div class="drink-list">'+
+        groups[g].map(drinkRowHtml).join("")+'</div></div>';
     });
+    // Skip identical re-renders so a tap is not lost when a snapshot lands mid-press.
+    if(html !== lastMenuHtml){ grid.innerHTML = html; lastMenuHtml = html; }
   }
+  $("menuGrid").addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest(".drink-btn") : null;
+    if(btn) logDrink(btn.dataset.item);
+  });
+  $("menuChips").addEventListener("click", function(e){
+    var chip = e.target.closest ? e.target.closest(".menu-chip") : null;
+    if(!chip) return;
+    menuFilter = chip.dataset.group || "all";
+    renderMenuGrid();
+  });
 
   // ==========================================================
   // Logging a drink
@@ -1065,6 +1142,7 @@
       snap.forEach(function(doc){ allGuests.push(Object.assign({id:doc.id}, doc.data())); });
       allGuests.sort(function(a,b){ return (b.totalMl||0) - (a.totalMl||0); });
       myGuestDoc = allGuests.find(function(g){ return g.id === guestId; }) || null;
+      renderMenuGrid();
       renderMyStats();
       renderLeaderboard();
       renderAdminGuestList();
