@@ -116,9 +116,9 @@ the file.
 
 Open the site, go to the **Admin** tab, enter your passcode, and either:
 
-- Click **"Load starter menu"** for the 18-item wedding bar (seven named beers,
-  six individual wines, hard seltzer, Sun Cruisers, hard cider, juice packets,
-  and one non-alcoholic option) and edit from there, or
+- Click **"Load starter menu"** for the 18-item wedding bar (eight beers including the juice packets,
+  six individual wines, hard seltzer, Sun Cruisers, hard cider,
+  and an N/A beer & TÖST option) and edit from there, or
 - Add your own drinks one by one — name, emoji, pour size in fl oz, category,
   and an optional details line shown under the name.
 
