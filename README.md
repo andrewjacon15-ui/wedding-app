@@ -116,9 +116,11 @@ the file.
 
 Open the site, go to the **Admin** tab, enter your passcode, and either:
 
-- Click **"Load starter menu"** for 7 basics (IPA, light beer, red and white
-  wine, champagne, water, a mocktail) and edit from there, or
-- Add your own drinks one by one — name, emoji, pour size in fl oz, category.
+- Click **"Load starter menu"** for the 13-item wedding bar (seven beers listed
+  by name, red and white wine, hard seltzer, hard cider, juice packets, and one
+  non-alcoholic option) and edit from there, or
+- Add your own drinks one by one — name, emoji, pour size in fl oz, category,
+  and an optional details line shown under the name.
 
 Toggle any item off any time (e.g. once the bar runs out) — it disappears
 from the guest menu without losing its history.

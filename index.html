@@ -123,6 +123,7 @@
   .drink-btn .emoji{font-size:1.7rem;}
   .drink-btn .name{font-weight:600;font-size:1.05rem;line-height:1.2;color:var(--taupe-dark);-webkit-text-fill-color:var(--taupe-dark);}
   .drink-btn .vol{font-size:.9rem;color:var(--muted);-webkit-text-fill-color:var(--muted);font-style:italic;}
+  .drink-btn .detail{font-size:.78rem;line-height:1.25;color:var(--muted);-webkit-text-fill-color:var(--muted);}
   .empty-state{text-align:center;color:var(--muted);font-style:italic;padding:30px 10px;font-size:1rem;}
   .cooldown-banner{
     background:var(--peach-light);color:var(--taupe-dark);border:1px solid var(--peach);
@@ -440,11 +441,15 @@
                 <input type="number" id="newItemOz" placeholder="1.5" step="0.25" min="0.25">
               </div>
             </div>
+            <label class="small">Details (optional, shown under the name)</label>
+            <input type="text" id="newItemDetail" placeholder="e.g. Rye, bitters, orange" maxlength="80" style="margin-bottom:8px;">
             <label class="small">Category</label>
             <select id="newItemCategory" style="margin-bottom:10px;">
               <option>Cocktail</option>
               <option>Beer</option>
               <option>Wine</option>
+              <option>Seltzer</option>
+              <option>Cider</option>
               <option>Champagne</option>
               <option>Shot</option>
               <option>Non-Alcoholic</option>
@@ -454,7 +459,7 @@
 
           <div class="card">
             <div class="section-title">Manage Menu</div>
-            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (7 drinks)</button>
+            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (13 drinks)</button>
             <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
           </div>
 
@@ -544,13 +549,19 @@
   var OZ_PER_ML = 1/29.5735;
   var DRINK_COOLDOWN_MS = 5 * 60 * 1000;
   var STARTER_MENU = [
-    {name:"IPA", emoji:"🍺", oz:12, category:"Beer"},
-    {name:"Light Beer", emoji:"🍻", oz:12, category:"Beer"},
-    {name:"Red Wine", emoji:"🍷", oz:7, category:"Wine"},
-    {name:"White Wine", emoji:"🥂", oz:7, category:"Wine"},
-    {name:"Champagne Toast", emoji:"🍾", oz:4, category:"Champagne"},
-    {name:"Water", emoji:"💧", oz:12, category:"Non-Alcoholic"},
-    {name:"Mocktail", emoji:"🍓", oz:8, category:"Non-Alcoholic"}
+    {name:"Michelob Ultra", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"Corona Extra", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"Miller High Life", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"Allagash White", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"Creature Comforts Tropicália", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"SweetWater 420", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"Spotted Cow", emoji:"🍺", oz:12, category:"Beer"},
+    {name:"White Wine", emoji:"🥂", oz:7, category:"Wine", detail:"Sauvignon Blanc · Pinot Grigio · Chardonnay"},
+    {name:"Red Wine", emoji:"🍷", oz:7, category:"Wine", detail:"Pinot Noir · Cabernet Sauvignon · Old Vine Zinfandel"},
+    {name:"Hard Seltzer", emoji:"🥤", oz:12, category:"Seltzer", detail:"White Claw · High Noon · Sun Cruisers"},
+    {name:"Hard Cider", emoji:"🍎", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
+    {name:"Juice Packet", emoji:"🧃", oz:6, category:"Cocktail", detail:"Fermentorium"},
+    {name:"Non-Alcoholic", emoji:"🍃", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · TÖST"}
   ];
 
   var db = null;
@@ -891,6 +902,7 @@
         '<span class="emoji">'+escapeHtml(m.emoji||'🥂')+'</span>'+
         '<span class="name">'+escapeHtml(m.name)+'</span>'+
         '<span class="vol">'+fmtNum(mlToOz(m.volumeMl))+' oz</span>'+
+        (m.detail ? '<span class="detail">'+escapeHtml(m.detail)+'</span>' : '')+
         '</button>';
     }).join("");
     grid.querySelectorAll(".drink-btn").forEach(function(btn){
@@ -1581,9 +1593,10 @@
     var emoji = $("newItemEmoji").value.trim() || "🥂";
     var oz = parseFloat($("newItemOz").value);
     var category = $("newItemCategory").value;
+    var detail = $("newItemDetail").value.trim();
     if(!name || !oz || oz <= 0){ showToast("Enter a name and a size in fl oz."); return; }
     var order = menuItems.length ? Math.max.apply(null, menuItems.map(function(m){return m.order||0;})) + 1 : 0;
-    db.collection("weddingDrinkMenu").add({
+    var doc = {
       name: name,
       emoji: emoji,
       volumeMl: Math.round(ozToMl(oz)),
@@ -1591,8 +1604,10 @@
       active: true,
       order: order,
       code: WEDDING_CODE
-    }).then(function(){
-      $("newItemName").value = ""; $("newItemEmoji").value = ""; $("newItemOz").value = "";
+    };
+    if(detail) doc.detail = detail;
+    db.collection("weddingDrinkMenu").add(doc).then(function(){
+      $("newItemName").value = ""; $("newItemEmoji").value = ""; $("newItemOz").value = ""; $("newItemDetail").value = "";
       showToast("Added " + name + " to the menu.");
     }).catch(function(e){ console.error(e); showToast("Couldn't add drink — check your connection."); });
   });
@@ -1600,12 +1615,12 @@
   $("seedMenuBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
     if(menuItems.length > 0){
-      if(!confirm("The menu already has items. Add the 7 starter drinks anyway?")) return;
+      if(!confirm("The menu already has items. Add the 13 starter drinks anyway?")) return;
     }
     var batch = db.batch();
     STARTER_MENU.forEach(function(item, i){
       var ref = db.collection("weddingDrinkMenu").doc();
-      batch.set(ref, {
+      var data = {
         name: item.name,
         emoji: item.emoji,
         volumeMl: Math.round(ozToMl(item.oz)),
@@ -1613,7 +1628,9 @@
         active: true,
         order: i,
         code: WEDDING_CODE
-      });
+      };
+      if(item.detail) data.detail = item.detail;
+      batch.set(ref, data);
     });
     batch.commit().then(function(){
       showToast("Starter menu loaded!");
@@ -1631,7 +1648,7 @@
         '<div class="mi-top"><span class="nm">'+escapeHtml(m.emoji||'🥂')+' '+escapeHtml(m.name)+'</span>'+
         '<label class="switch"><input type="checkbox" data-toggle="'+m.id+'" '+(m.active!==false?'checked':'')+'><span class="slider"></span></label>'+
         '</div>'+
-        '<div style="font-size:.78rem;color:var(--muted);">'+escapeHtml(m.category||'')+' · '+fmtNum(mlToOz(m.volumeMl))+' oz</div>'+
+        '<div style="font-size:.78rem;color:var(--muted);">'+escapeHtml(m.category||'')+' · '+fmtNum(mlToOz(m.volumeMl))+' oz'+(m.detail ? ' · '+escapeHtml(m.detail) : '')+'</div>'+
         '</div>';
     }).join("");
     box.querySelectorAll("[data-toggle]").forEach(function(cb){
@@ -1895,6 +1912,8 @@
     else if(topCat === "Beer") title = "Hop Head";
     else if(topCat === "Champagne") title = "Bubbly Enthusiast";
     else if(topCat === "Cocktail") title = "Cocktail Captain";
+    else if(topCat === "Seltzer") title = "Seltzer Sipper";
+    else if(topCat === "Cider") title = "Cider Sipper";
     else if(topCat === "Non-Alcoholic") title = (entries[0] && /water/i.test(entries[0].item.name)) ? "Hydration Hero" : "Mocktail Maven";
     return {
       name: me.name || guestName || "Guest",
