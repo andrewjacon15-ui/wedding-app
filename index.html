@@ -146,7 +146,8 @@
     margin-bottom:14px;text-align:center;display:none;
   }
   .cooldown-banner.show{display:block;}
-  .drink-grid.cooling-down .drink-btn{opacity:.4;pointer-events:none;}
+  .drink-grid.cool-alc .drink-btn[data-na="0"],
+  .drink-grid.cool-na .drink-btn[data-na="1"]{opacity:.4;pointer-events:none;}
   /* Me tab */
   .stat-hero{text-align:center;padding:10px 0 4px;}
   .stat-hero .big{font-family:var(--display);font-size:3rem;color:var(--taupe);line-height:1;letter-spacing:2px;}
@@ -328,7 +329,7 @@
         <div class="card">
           <div class="section-title">The Bar Menu</div>
           <div class="photo-hint" style="margin-top:-6px;">Tap a drink each time you grab one. Please drink responsibly and look out for each other.</div>
-          <div class="cooldown-banner" id="cooldownBanner">Next drink unlocks in <span id="cooldownTime">0:00</span></div>
+          <div class="cooldown-banner" id="cooldownBanner"></div>
           <div class="note-wrap">
             <input type="text" id="drinkNote" maxlength="140" placeholder="Add a note with your next drink (optional)" autocomplete="off">
             <span class="note-count" id="drinkNoteCount"></span>
@@ -475,7 +476,7 @@
 
           <div class="card">
             <div class="section-title">Manage Menu</div>
-            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (18 drinks)</button>
+            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (21 drinks)</button>
             <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
           </div>
 
@@ -563,15 +564,17 @@
   "use strict";
 
   var OZ_PER_ML = 1/29.5735;
-  var DRINK_COOLDOWN_MS = 5 * 60 * 1000;
+  var DRINK_COOLDOWN_MS = 5 * 60 * 1000;   // between alcoholic drinks
+  var NA_COOLDOWN_MS = 60 * 1000;          // between non-alcoholic drinks (water, soda, juice, N/A beer)
+  function isNaCategory(c){ return c === "Non-Alcoholic"; }
   var STARTER_MENU = [
     {name:"Michelob Ultra", emoji:"🍺", oz:12, category:"Beer", detail:"Light lager"},
-    {name:"Corona Extra", emoji:"🍺", oz:12, category:"Beer", detail:"Mexican lager"},
-    {name:"Miller High Life", emoji:"🍺", oz:12, category:"Beer", detail:"American lager"},
+    {name:"Corona Extra", emoji:"🍾", oz:12, category:"Beer", detail:"Mexican lager"},
+    {name:"Miller High Life", emoji:"🍾", oz:12, category:"Beer", detail:"American lager"},
     {name:"Allagash White", emoji:"🍺", oz:12, category:"Beer", detail:"Belgian-style witbier"},
     {name:"Creature Comforts Tropicália", emoji:"🍺", oz:12, category:"Beer", detail:"IPA"},
     {name:"SweetWater 420", emoji:"🍺", oz:12, category:"Beer", detail:"Extra pale ale"},
-    {name:"Spotted Cow", emoji:"🍺", oz:12, category:"Beer", detail:"Farmhouse ale"},
+    {name:"Spotted Cow", emoji:"🍾", oz:12, category:"Beer", detail:"Farmhouse ale"},
     {name:"Juice Packet", emoji:"🧃", oz:16, category:"Beer", detail:"Fermentorium"},
     {name:"Sauvignon Blanc", emoji:"🥂", oz:7, category:"Wine", detail:"White wine"},
     {name:"Pinot Grigio", emoji:"🥂", oz:7, category:"Wine", detail:"White wine"},
@@ -582,7 +585,10 @@
     {name:"Hard Seltzer", emoji:"🥤", oz:12, category:"Seltzer", detail:"White Claw · High Noon"},
     {name:"Sun Cruisers", emoji:"🍹", oz:12, category:"Cocktail", detail:"Variety pack"},
     {name:"Hard Cider", emoji:"🍎", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
-    {name:"N/A Beer & TÖST", emoji:"🍃", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · TÖST"}
+    {name:"N/A Beer & TÖST", emoji:"🍃", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · TÖST"},
+    {name:"Water", emoji:"💧", oz:12, category:"Non-Alcoholic"},
+    {name:"Soda", emoji:"🥤", oz:12, category:"Non-Alcoholic"},
+    {name:"Juice", emoji:"🍊", oz:8, category:"Non-Alcoholic"}
   ];
 
   var db = null;
@@ -926,7 +932,7 @@
   var lastChipsHtml = "";
 
   function drinkRowHtml(m){
-    return '<button class="drink-btn" data-item="'+m.id+'">'+
+    return '<button class="drink-btn" data-item="'+m.id+'" data-na="'+(isNaCategory(m.category) ? 1 : 0)+'">'+
       '<span class="emoji">'+escapeHtml(m.emoji||'🥂')+'</span>'+
       '<span class="txt"><span class="name">'+escapeHtml(m.name)+'</span>'+
       (m.detail ? '<span class="detail">'+escapeHtml(m.detail)+'</span>' : '')+'</span>'+
@@ -1047,9 +1053,11 @@
     if(!guestId){ $("nameGate").style.display = "flex"; return; }
     var item = menuItems.find(function(m){ return m.id === itemId; });
     if(!item) return;
-    var cooldownRemaining = getCooldownRemainingMs();
+    var itemIsNa = isNaCategory(item.category);
+    var cooldownRemaining = getCooldownRemainingMs(itemIsNa);
     if(cooldownRemaining > 0){
-      showToast("Slow down — next drink unlocks in " + fmtCountdown(cooldownRemaining) + ".");
+      showToast("Slow down — " + (itemIsNa ? "another non-alcoholic drink" : "your next drink") +
+        " unlocks in " + fmtCountdown(cooldownRemaining) + ".");
       return;
     }
 
@@ -1090,7 +1098,7 @@
     markWriteStart();
     batch.commit().then(function(){
       markWriteOk();
-      optimisticLastDrinkAt = Date.now();
+      if(itemIsNa) optimisticLastNaAt = Date.now(); else optimisticLastAlcAt = Date.now();
       updateCooldownUI();
       if(note || noteBlocked){ $("drinkNote").value = ""; updateNoteCount(); }
       showToast("Logged " + item.emoji + " " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)" + (noteBlocked ? ". Your note wasn't posted." : ""), function(){
@@ -1120,8 +1128,10 @@
       undoData.byItem[itemId] = firebase.firestore.FieldValue.increment(-1);
     }
     batch.set(db.collection("weddingDrinkGuests").doc(guestId), undoData, {merge:true});
+    var undone = menuItems.find(function(m){ return m.id === itemId; });
     batch.commit().then(function(){
-      optimisticLastDrinkAt = 0;
+      if(!undone || isNaCategory(undone.category)) optimisticLastNaAt = 0;
+      if(!undone || !isNaCategory(undone.category)) optimisticLastAlcAt = 0;
       updateCooldownUI();
       showToast("Drink removed.");
     }).catch(function(e){ console.error(e); showToast("Couldn't undo — check your connection."); });
@@ -1133,7 +1143,8 @@
   var myLogEntries = [];
   var myGuestDoc = null;
   var allGuests = [];
-  var optimisticLastDrinkAt = 0;
+  var optimisticLastAlcAt = 0;
+  var optimisticLastNaAt = 0;
   var cooldownTicker = null;
 
   if(firebaseReady){
@@ -1168,28 +1179,30 @@
   watchMyLog();
 
   // ---- Drink cooldown ----
-  function getLastDrinkAtMs(){
-    var last = myLogEntries.find(function(l){ return !l.voided; });
+  // Alcoholic drinks are paced 5 minutes apart; non-alcoholic ones (water, soda,
+  // juice, N/A beer) only 1 minute apart, and the two don't block each other.
+  function getLastDrinkAtMs(wantNa){
+    var last = myLogEntries.find(function(l){ return !l.voided && isNaCategory(l.category) === wantNa; });
     var fromSnapshot = (last && last.loggedAt) ? last.loggedAt.toMillis() : 0;
-    return Math.max(fromSnapshot, optimisticLastDrinkAt);
+    return Math.max(fromSnapshot, wantNa ? optimisticLastNaAt : optimisticLastAlcAt);
   }
-  function getCooldownRemainingMs(){
-    var last = getLastDrinkAtMs();
+  function getCooldownRemainingMs(wantNa){
+    var last = getLastDrinkAtMs(wantNa);
     if(!last) return 0;
-    return (last + DRINK_COOLDOWN_MS) - Date.now();
+    return (last + (wantNa ? NA_COOLDOWN_MS : DRINK_COOLDOWN_MS)) - Date.now();
   }
   function updateCooldownUI(){
-    var remaining = getCooldownRemainingMs();
+    var alc = getCooldownRemainingMs(false);
+    var na = getCooldownRemainingMs(true);
     var banner = $("cooldownBanner");
     var grid = $("menuGrid");
-    if(remaining > 0){
-      banner.classList.add("show");
-      $("cooldownTime").textContent = fmtCountdown(remaining);
-      grid.classList.add("cooling-down");
-    }else{
-      banner.classList.remove("show");
-      grid.classList.remove("cooling-down");
-    }
+    var lines = [];
+    if(alc > 0) lines.push("Next drink unlocks in " + fmtCountdown(alc));
+    if(na > 0) lines.push("Next non-alcoholic drink unlocks in " + fmtCountdown(na));
+    banner.innerHTML = lines.join("<br>");
+    banner.classList.toggle("show", lines.length > 0);
+    grid.classList.toggle("cool-alc", alc > 0);
+    grid.classList.toggle("cool-na", na > 0);
   }
   cooldownTicker = setInterval(updateCooldownUI, 1000);
 
@@ -1698,7 +1711,7 @@
   $("seedMenuBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
     if(menuItems.length > 0){
-      if(!confirm("The menu already has items. Add the 18 starter drinks anyway?")) return;
+      if(!confirm("The menu already has items. Add the 21 starter drinks anyway?")) return;
     }
     var batch = db.batch();
     STARTER_MENU.forEach(function(item, i){
@@ -2214,7 +2227,8 @@
         del.push(function(b){ b.delete(doc.ref); });
       });
       return commitInChunks(mark).then(function(){ return commitInChunks(del); }).then(function(){
-        optimisticLastDrinkAt = 0;
+        optimisticLastAlcAt = 0;
+        optimisticLastNaAt = 0;
         updateCooldownUI();
         showToast("Purged: " + guests.length + " guest record(s) and " + logSnap.size + " log entries deleted.");
       });

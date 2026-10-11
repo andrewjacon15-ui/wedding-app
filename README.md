@@ -12,9 +12,10 @@ guests open on their phone.
   each with its own pour size, so totals are accurate to your actual bar.
 - **One-tap logging** — guests pick their name once, then tap a drink each
   time they grab one. Includes instant "Undo" if they misclick.
-- **5-minute pacing cooldown** — after logging a drink, the menu locks with a
-  live countdown until the next one unlocks. Undoing a mis-tap clears it
-  immediately.
+- **Pacing cooldown** — after an alcoholic drink the menu locks for 5 minutes with a
+  live countdown. Non-alcoholic drinks (water, soda, juice, N/A beer) only wait
+  1 minute, and the two timers do not block each other. Undoing a mis-tap clears
+  it immediately.
 - **My stats** — running total in fl oz or mL, drink count, and live rank.
 - **Share my weekend** — every guest can turn their stats into a cute
   story-sized image (1080x1920) with their total, rank, a fun title like "Hop
@@ -116,9 +117,9 @@ the file.
 
 Open the site, go to the **Admin** tab, enter your passcode, and either:
 
-- Click **"Load starter menu"** for the 18-item wedding bar (eight beers including the juice packets,
+- Click **"Load starter menu"** for the 21-item wedding bar (eight beers including the juice packets,
   six individual wines, hard seltzer, Sun Cruisers, hard cider,
-  and an N/A beer & TÖST option) and edit from there, or
+  and N/A beer & TÖST, water, soda and juice) and edit from there, or
 - Add your own drinks one by one — name, emoji, pour size in fl oz, category,
   and an optional details line shown under the name.
 
