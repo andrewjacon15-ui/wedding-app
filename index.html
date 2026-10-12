@@ -139,6 +139,7 @@
   .logo{display:inline-block;width:1.5rem;height:1.5rem;color:var(--taupe-dark);flex:0 0 auto;}
   .logo .a{fill:var(--peach);}
   .logo .b{fill:currentColor;stroke:none;}
+  .logo .c{fill:var(--peach);stroke:none;}
   .drink-btn .logo{width:1.9rem;height:1.9rem;}
   .log-row .li .emoji .logo{width:1.45rem;height:1.45rem;vertical-align:middle;}
   .feed-item .fwhat .logo{width:1.1em;height:1.1em;vertical-align:-.22em;margin-right:2px;}
@@ -586,8 +587,8 @@
     {name:"Allagash White", emoji:"🍺", icon:"wheat", oz:12, category:"Beer", detail:"Belgian-style witbier"},
     {name:"Creature Comforts Tropicália", emoji:"🍺", icon:"pineapple", oz:12, category:"Beer", detail:"IPA"},
     {name:"SweetWater 420", emoji:"🍺", icon:"fish", oz:12, category:"Beer", detail:"Extra pale ale"},
-    {name:"Spotted Cow", emoji:"🍾", icon:"bottle-spots", oz:12, category:"Beer", detail:"Farmhouse ale"},
-    {name:"Juice Packet", emoji:"🧃", icon:"pouch", oz:16, category:"Beer", detail:"Fermentorium"},
+    {name:"Spotted Cow", emoji:"🍾", icon:"bottle-cow", oz:12, category:"Beer", detail:"Farmhouse ale"},
+    {name:"Juice Packet", emoji:"🍺", icon:"hop", oz:16, category:"Beer", detail:"Fermentorium · IPA"},
     {name:"Sauvignon Blanc", emoji:"🥂", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
     {name:"Pinot Grigio", emoji:"🥂", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
     {name:"Chardonnay", emoji:"🥂", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
@@ -597,7 +598,7 @@
     {name:"Hard Seltzer", emoji:"🥤", icon:"claw", oz:12, category:"Seltzer", detail:"White Claw · High Noon"},
     {name:"Sun Cruisers", emoji:"🍹", icon:"sun", oz:12, category:"Cocktail", detail:"Variety pack"},
     {name:"Hard Cider", emoji:"🍎", icon:"apple", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
-    {name:"N/A Beer", emoji:"🍃", icon:"mountain", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · Upside Dawn, Run Wild"},
+    {name:"N/A Beer", emoji:"🍃", icon:"mountain", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing"},
     {name:"TÖST", emoji:"🥂", icon:"flute", oz:7, category:"Non-Alcoholic", detail:"Original · Sangria"},
     {name:"Water", emoji:"💧", icon:"drop", oz:12, category:"Non-Alcoholic"},
     {name:"Soda", emoji:"🥤", icon:"soda", oz:12, category:"Non-Alcoholic"},
@@ -622,9 +623,9 @@
       "Bottle with moon",
       "<path class=\"a\" d=\"M10.2 2.5h3.6v5.2c0 1.2 2.2 2 2.2 4.8v8.2a1.3 1.3 0 0 1-1.3 1.3H9.3A1.3 1.3 0 0 1 8 20.7v-8.2c0-2.8 2.2-3.6 2.2-4.8z\"/><path d=\"M10.2 4.7h3.6\"/><path class=\"b\" d=\"M13.67 18.4A2.7 2.7 0 1 1 13.67 13.6 2.1 2.1 0 0 0 13.67 18.4z\"/>"
     ],
-    "bottle-spots": [
-      "Bottle with spots",
-      "<path class=\"a\" d=\"M10.2 2.5h3.6v5.2c0 1.2 2.2 2 2.2 4.8v8.2a1.3 1.3 0 0 1-1.3 1.3H9.3A1.3 1.3 0 0 1 8 20.7v-8.2c0-2.8 2.2-3.6 2.2-4.8z\"/><path d=\"M10.2 4.7h3.6\"/><circle class=\"b\" cx=\"10.9\" cy=\"15\" r=\"1.1\"/><circle class=\"b\" cx=\"13.2\" cy=\"17.1\" r=\"1.3\"/><circle class=\"b\" cx=\"13.7\" cy=\"14.2\" r=\".7\"/>"
+    "bottle-cow": [
+      "Bottle with cow",
+      "<path class=\"a\" d=\"M10.2 2.5h3.6v5.2c0 1.2 2.2 2 2.2 4.8v8.2a1.3 1.3 0 0 1-1.3 1.3H9.3A1.3 1.3 0 0 1 8 20.7v-8.2c0-2.8 2.2-3.6 2.2-4.8z\"/><path d=\"M10.2 4.7h3.6\"/><path d=\"M10.3 13.6 9.6 11.9M13.7 13.6 14.4 11.9\" stroke-width=\"1\"/><ellipse class=\"b\" cx=\"8.9\" cy=\"14.9\" rx=\"1.3\" ry=\".7\" transform=\"rotate(-20 8.9 14.9)\"/><ellipse class=\"b\" cx=\"15.1\" cy=\"14.9\" rx=\"1.3\" ry=\".7\" transform=\"rotate(20 15.1 14.9)\"/><path class=\"b\" d=\"M10 13.6h4l.9 3.2c.3 1.5-.5 3-2 3h-1.8c-1.5 0-2.3-1.5-2-3z\"/><circle class=\"c\" cx=\"11.1\" cy=\"15.4\" r=\".45\"/><circle class=\"c\" cx=\"12.9\" cy=\"15.4\" r=\".45\"/><ellipse class=\"c\" cx=\"12\" cy=\"18\" rx=\"1.5\" ry=\".85\"/>"
     ],
     "wheat": [
       "Wheat",
@@ -651,8 +652,16 @@
       "<path d=\"M7.8 3h8.4c.3 4.5-1.7 7.5-4.2 7.5S7.5 7.5 7.8 3z\"/><path class=\"b\" d=\"M8.1 6.2h7.8c-.3 2.6-1.8 4.3-3.9 4.3s-3.6-1.7-3.9-4.3z\"/><path d=\"M12 10.5v9.8M8.5 21h7\"/>"
     ],
     "claw": [
-      "Claw marks",
-      "<path d=\"M7.5 3.5c.6 6 1.3 11 3.3 17\"/><path d=\"M12.2 3c.7 6 1.5 12 4 18\"/><path d=\"M16.8 4.5c.4 5 .9 9 2.5 14\"/>"
+      "Seltzer can with claw marks",
+      "<path class=\"a\" d=\"M7.5 3.5h9v16.2a1.3 1.3 0 0 1-1.3 1.3H8.8a1.3 1.3 0 0 1-1.3-1.3z\"/><path d=\"M7.5 6.5h9M7.5 17.5h9\"/><path d=\"M10 9.2l1.4 6.6M12.2 8.8l1.5 7.4M14.4 9.6l1 5.4\" stroke-width=\"1.3\"/>"
+    ],
+    "hop": [
+      "Hop cone",
+      "<path d=\"M12 7.4V4.6\"/><path class=\"b\" d=\"M12 5.6c1.2-1.9 3.1-2.5 5.1-2.1-.4 2.1-2.4 3.1-5.1 2.1z\"/><path class=\"a\" d=\"M12 21.6c-3-1.6-5-4.6-5-8.4 0-2.6 2-4.8 5-5.2 3 .4 5 2.6 5 5.2 0 3.8-2 6.8-5 8.4z\"/><path d=\"M7.5 11.4 12 14.3l4.5-2.9M7.6 15.4l4.4 2.9 4.4-2.9\"/>"
+    ],
+    "flute": [
+      "Champagne flute",
+      "<path d=\"M9 2.5h6l-.6 8.3c-.1 1-1.2 1.7-2.4 1.7s-2.3-.7-2.4-1.7z\"/><path class=\"a\" d=\"M9.5 6.6h5l-.2 4.2c-.1 1-1.1 1.7-2.3 1.7s-2.2-.7-2.3-1.7z\"/><path d=\"M12 12.5v7.8M8.5 21h7\"/><circle class=\"b\" cx=\"11.4\" cy=\"9\" r=\".55\"/><circle class=\"b\" cx=\"12.8\" cy=\"10.6\" r=\".5\"/><path d=\"M18.2 4.2v3M16.7 5.7h3\" stroke-width=\"1.2\"/>"
     ],
     "sun": [
       "Sun and waves",
@@ -665,10 +674,6 @@
     "mountain": [
       "Mountains",
       "<path class=\"a\" d=\"M2.8 19.5l6-10.5 4 7 2.5-4 5.9 7.5z\"/><circle cx=\"17.8\" cy=\"6.2\" r=\"1.8\"/>"
-    ],
-    "flute": [
-      "Champagne flute",
-      "<path class=\"a\" d=\"M9 2.5h6l-.6 8.3c-.1 1-1.2 1.7-2.4 1.7s-2.3-.7-2.4-1.7z\"/><path d=\"M12 12.5v7.8M8.8 21h6.4\"/><circle class=\"b\" cx=\"11.3\" cy=\"6\" r=\".6\"/><circle class=\"b\" cx=\"12.8\" cy=\"8.3\" r=\".6\"/><circle class=\"b\" cx=\"11.7\" cy=\"10\" r=\".5\"/>"
     ],
     "cocktail": [
       "Cocktail",
@@ -718,7 +723,7 @@
   function logoDataUrl(key, color){
     var L = LOGOS[key];
     if(!L) return "";
-    var inner = L[1].replace(/class="a"/g, 'fill="#e9d5c5"').replace(/class="b"/g, 'fill="' + color + '" stroke="none"');
+    var inner = L[1].replace(/class="a"/g, 'fill="#e9d5c5"').replace(/class="b"/g, 'fill="' + color + '" stroke="none"').replace(/class="c"/g, 'fill="#e9d5c5" stroke="none"');
     var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="240" height="240" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }
