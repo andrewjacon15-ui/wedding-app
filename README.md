@@ -117,9 +117,9 @@ the file.
 
 Open the site, go to the **Admin** tab, enter your passcode, and either:
 
-- Click **"Load starter menu"** for the 21-item wedding bar (eight beers including the juice packets,
+- Click **"Load starter menu"** for the 22-item wedding bar (eight beers including the juice packets,
   six individual wines, hard seltzer, Sun Cruisers, hard cider,
-  and N/A beer & TÖST, water, soda and juice) and edit from there, or
+  and N/A beer, TÖST, water, soda and juice) and edit from there, or
 - Add your own drinks one by one — name, emoji, pour size in fl oz, category,
   an optional details line shown under the name, and an optional minimalist
   logo (beer bottle, wine glass, crown, fish, mountain…) that replaces the emoji.

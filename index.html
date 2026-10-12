@@ -488,7 +488,7 @@
 
           <div class="card">
             <div class="section-title">Manage Menu</div>
-            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (21 drinks)</button>
+            <button class="btn-secondary" id="seedMenuBtn" style="margin-bottom:12px;">Load starter menu (22 drinks)</button>
             <div id="adminMenuList"><div class="empty-state">No drinks yet — add one above.</div></div>
           </div>
 
@@ -597,7 +597,8 @@
     {name:"Hard Seltzer", emoji:"🥤", icon:"claw", oz:12, category:"Seltzer", detail:"White Claw · High Noon"},
     {name:"Sun Cruisers", emoji:"🍹", icon:"sun", oz:12, category:"Cocktail", detail:"Variety pack"},
     {name:"Hard Cider", emoji:"🍎", icon:"apple", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
-    {name:"N/A Beer & TÖST", emoji:"🍃", icon:"mountain", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · TÖST"},
+    {name:"N/A Beer", emoji:"🍃", icon:"mountain", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing · Upside Dawn, Run Wild"},
+    {name:"TÖST", emoji:"🥂", icon:"flute", oz:7, category:"Non-Alcoholic", detail:"Original · Sangria"},
     {name:"Water", emoji:"💧", icon:"drop", oz:12, category:"Non-Alcoholic"},
     {name:"Soda", emoji:"🥤", icon:"soda", oz:12, category:"Non-Alcoholic"},
     {name:"Juice", emoji:"🍊", icon:"orange", oz:8, category:"Non-Alcoholic"}
@@ -664,6 +665,10 @@
     "mountain": [
       "Mountains",
       "<path class=\"a\" d=\"M2.8 19.5l6-10.5 4 7 2.5-4 5.9 7.5z\"/><circle cx=\"17.8\" cy=\"6.2\" r=\"1.8\"/>"
+    ],
+    "flute": [
+      "Champagne flute",
+      "<path class=\"a\" d=\"M9 2.5h6l-.6 8.3c-.1 1-1.2 1.7-2.4 1.7s-2.3-.7-2.4-1.7z\"/><path d=\"M12 12.5v7.8M8.8 21h6.4\"/><circle class=\"b\" cx=\"11.3\" cy=\"6\" r=\".6\"/><circle class=\"b\" cx=\"12.8\" cy=\"8.3\" r=\".6\"/><circle class=\"b\" cx=\"11.7\" cy=\"10\" r=\".5\"/>"
     ],
     "cocktail": [
       "Cocktail",
@@ -1851,7 +1856,7 @@
   $("seedMenuBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
     if(menuItems.length > 0){
-      if(!confirm("The menu already has items. Add the 21 starter drinks anyway?")) return;
+      if(!confirm("The menu already has items. Add the 22 starter drinks anyway?")) return;
     }
     var batch = db.batch();
     STARTER_MENU.forEach(function(item, i){
