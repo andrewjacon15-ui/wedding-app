@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#FFFAF5">
 <title>Andrew & Lydia · Wedding Weekend</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥂</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f4c3e' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M9 2.5h6l-.6 8.3c-.1 1-1.2 1.7-2.4 1.7s-2.3-.7-2.4-1.7z'/><path fill='%23e9d5c5' d='M9.5 6.6h5l-.2 4.2c-.1 1-1.1 1.7-2.3 1.7s-2.2-.7-2.3-1.7z'/><path d='M12 12.5v7.8M8.5 21h7'/><circle fill='%235f4c3e' stroke='none' cx='11.4' cy='9' r='.55'/><circle fill='%235f4c3e' stroke='none' cx='12.8' cy='10.6' r='.5'/><path d='M18.2 4.2v3M16.7 5.7h3' stroke-width='1.2'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amarante&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
@@ -459,18 +459,10 @@
             <div class="section-title">Add a Drink</div>
             <label class="small">Name</label>
             <input type="text" id="newItemName" placeholder="e.g. Old Fashioned" style="margin-bottom:8px;">
-            <div class="field-grid">
-              <div>
-                <label class="small">Emoji</label>
-                <input type="text" id="newItemEmoji" placeholder="🥃" maxlength="4">
-              </div>
-              <div>
-                <label class="small">Size (fl oz)</label>
-                <input type="number" id="newItemOz" placeholder="1.5" step="0.25" min="0.25">
-              </div>
-            </div>
-            <label class="small">Logo (optional, replaces the emoji)</label>
-            <select id="newItemIcon" style="margin-bottom:8px;"><option value="">Use the emoji</option></select>
+            <label class="small">Size (fl oz)</label>
+            <input type="number" id="newItemOz" placeholder="1.5" step="0.25" min="0.25" style="margin-bottom:8px;">
+            <label class="small">Logo</label>
+            <select id="newItemIcon" style="margin-bottom:8px;"><option value="">Choose a logo…</option></select>
             <label class="small">Details (optional, shown under the name)</label>
             <input type="text" id="newItemDetail" placeholder="e.g. Rye, bitters, orange" maxlength="80" style="margin-bottom:8px;">
             <label class="small">Category</label>
@@ -563,7 +555,7 @@
 
 <div id="waterNudge">
   <div class="nudge-box">
-    <div class="nudge-emoji" id="nudgeIcon">💧</div>
+    <div class="nudge-emoji" id="nudgeIcon"></div>
     <h2>Water check?</h2>
     <p id="nudgeMsg"></p>
     <button class="btn-primary" id="nudgeOk">Good call</button>
@@ -581,28 +573,28 @@
   var NA_COOLDOWN_MS = 60 * 1000;          // between non-alcoholic drinks (water, soda, juice, N/A beer)
   function isNaCategory(c){ return c === "Non-Alcoholic"; }
   var STARTER_MENU = [
-    {name:"Michelob Ultra", emoji:"🍺", icon:"pilsner", oz:12, category:"Beer", detail:"Light lager"},
-    {name:"Corona Extra", emoji:"🍾", icon:"bottle-crown", oz:12, category:"Beer", detail:"Mexican lager"},
-    {name:"Miller High Life", emoji:"🍾", icon:"bottle-moon", oz:12, category:"Beer", detail:"American lager"},
-    {name:"Allagash White", emoji:"🍺", icon:"wheat", oz:12, category:"Beer", detail:"Belgian-style witbier"},
-    {name:"Creature Comforts Tropicália", emoji:"🍺", icon:"pineapple", oz:12, category:"Beer", detail:"IPA"},
-    {name:"SweetWater 420", emoji:"🍺", icon:"fish", oz:12, category:"Beer", detail:"Extra pale ale"},
-    {name:"Spotted Cow", emoji:"🍾", icon:"bottle-cow", oz:12, category:"Beer", detail:"Farmhouse ale"},
-    {name:"Juice Packet", emoji:"🍺", icon:"hop", oz:16, category:"Beer", detail:"Fermentorium · IPA"},
-    {name:"Sauvignon Blanc", emoji:"🥂", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
-    {name:"Pinot Grigio", emoji:"🥂", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
-    {name:"Chardonnay", emoji:"🥂", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
-    {name:"Pinot Noir", emoji:"🍷", icon:"wine-red", oz:7, category:"Wine", detail:"Red wine"},
-    {name:"Cabernet Sauvignon", emoji:"🍷", icon:"wine-red", oz:7, category:"Wine", detail:"Red wine"},
-    {name:"Old Vine Zinfandel", emoji:"🍷", icon:"wine-red", oz:7, category:"Wine", detail:"Red wine"},
-    {name:"Hard Seltzer", emoji:"🥤", icon:"claw", oz:12, category:"Seltzer", detail:"White Claw · High Noon"},
-    {name:"Sun Cruisers", emoji:"🍹", icon:"sun", oz:12, category:"Cocktail", detail:"Variety pack"},
-    {name:"Hard Cider", emoji:"🍎", icon:"apple", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
-    {name:"N/A Beer", emoji:"🍃", icon:"mountain", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing"},
-    {name:"TÖST", emoji:"🥂", icon:"flute", oz:7, category:"Non-Alcoholic", detail:"Original · Sangria"},
-    {name:"Water", emoji:"💧", icon:"drop", oz:12, category:"Non-Alcoholic"},
-    {name:"Soda", emoji:"🥤", icon:"soda", oz:12, category:"Non-Alcoholic"},
-    {name:"Juice", emoji:"🍊", icon:"orange", oz:8, category:"Non-Alcoholic"}
+    {name:"Michelob Ultra", icon:"pilsner", oz:12, category:"Beer", detail:"Light lager"},
+    {name:"Corona Extra", icon:"bottle-crown", oz:12, category:"Beer", detail:"Mexican lager"},
+    {name:"Miller High Life", icon:"bottle-moon", oz:12, category:"Beer", detail:"American lager"},
+    {name:"Allagash White", icon:"wheat", oz:12, category:"Beer", detail:"Belgian-style witbier"},
+    {name:"Creature Comforts Tropicália", icon:"pineapple", oz:12, category:"Beer", detail:"IPA"},
+    {name:"SweetWater 420", icon:"fish", oz:12, category:"Beer", detail:"Extra pale ale"},
+    {name:"Spotted Cow", icon:"bottle-cow", oz:12, category:"Beer", detail:"Farmhouse ale"},
+    {name:"Juice Packet", icon:"hop", oz:16, category:"Beer", detail:"Fermentorium · IPA"},
+    {name:"Sauvignon Blanc", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
+    {name:"Pinot Grigio", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
+    {name:"Chardonnay", icon:"wine-white", oz:7, category:"Wine", detail:"White wine"},
+    {name:"Pinot Noir", icon:"wine-red", oz:7, category:"Wine", detail:"Red wine"},
+    {name:"Cabernet Sauvignon", icon:"wine-red", oz:7, category:"Wine", detail:"Red wine"},
+    {name:"Old Vine Zinfandel", icon:"wine-red", oz:7, category:"Wine", detail:"Red wine"},
+    {name:"Hard Seltzer", icon:"claw", oz:12, category:"Seltzer", detail:"White Claw · High Noon"},
+    {name:"Sun Cruisers", icon:"sun", oz:12, category:"Cocktail", detail:"Variety pack"},
+    {name:"Hard Cider", icon:"apple", oz:12, category:"Cider", detail:"Angry Orchard Crisp Apple"},
+    {name:"N/A Beer", icon:"mountain", oz:12, category:"Non-Alcoholic", detail:"Athletic Brewing"},
+    {name:"TÖST", icon:"flute", oz:7, category:"Non-Alcoholic", detail:"Original · Sangria"},
+    {name:"Water", icon:"drop", oz:12, category:"Non-Alcoholic"},
+    {name:"Soda", icon:"soda", oz:12, category:"Non-Alcoholic"},
+    {name:"Juice", icon:"orange", oz:8, category:"Non-Alcoholic"}
   ];
 
   // Minimalist line logos, keyed by name. "a" = soft peach fill, "b" = solid mark.
@@ -708,7 +700,7 @@
   // Menu item (or anything with .icon/.emoji): the logo if it has one, else its emoji.
   function iconHtml(src){
     if(src && src.icon && LOGOS[src.icon]) return logoSvg(src.icon);
-    return escapeHtml((src && src.emoji) || "🥂");
+    return logoSvg("cocktail");
   }
   // Log entry: its stored logo, else the menu item's, else the emoji saved with it.
   function entryIconHtml(entry){
@@ -717,7 +709,7 @@
       var m = menuItems.find(function(x){ return x.id === entry.itemId; });
       if(m && m.icon && LOGOS[m.icon]) key = m.icon;
     }
-    return key ? logoSvg(key) : escapeHtml(entry.emoji || "🥂");
+    return logoSvg(key || "cocktail");
   }
   // Same logo as a standalone image source, for the canvas share cards.
   function logoDataUrl(key, color){
@@ -1092,7 +1084,7 @@
     var grid = $("menuGrid"), chips = $("menuChips");
     if(!active.length){
       chips.innerHTML = ""; lastChipsHtml = "";
-      grid.innerHTML = '<div class="empty-state">The bar menu is empty. Ask an admin to add some drinks! 🍸</div>';
+      grid.innerHTML = '<div class="empty-state">The bar menu is empty. Ask an admin to add some drinks!</div>';
       lastMenuHtml = "";
       return;
     }
@@ -1218,7 +1210,6 @@
       guestName: guestName,
       itemId: item.id,
       itemName: item.name,
-      emoji: item.emoji || "🥂",
       category: item.category || "Drink",
       volumeMl: item.volumeMl,
       voided: false,
@@ -1411,7 +1402,7 @@
     });
     return Object.keys(totals).map(function(id){
       var m = menuItems.find(function(x){ return x.id === id; });
-      return { id: id, name: m ? m.name : "Mystery drink", emoji: m ? (m.emoji || "🥂") : "🥂", icon: m ? (m.icon || "") : "", count: totals[id] };
+      return { id: id, name: m ? m.name : "Mystery drink", icon: (m && m.icon) || "cocktail", count: totals[id] };
     }).sort(function(a, b){ return b.count - a.count; });
   }
 
@@ -1834,15 +1825,16 @@
   $("addItemBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
     var name = $("newItemName").value.trim();
-    var emoji = $("newItemEmoji").value.trim() || "🥂";
     var oz = parseFloat($("newItemOz").value);
     var category = $("newItemCategory").value;
     var detail = $("newItemDetail").value.trim();
     if(!name || !oz || oz <= 0){ showToast("Enter a name and a size in fl oz."); return; }
+    var iconKey = $("newItemIcon").value;
+    if(!iconKey || !LOGOS[iconKey]){ showToast("Pick a logo for the drink."); return; }
     var order = menuItems.length ? Math.max.apply(null, menuItems.map(function(m){return m.order||0;})) + 1 : 0;
     var doc = {
       name: name,
-      emoji: emoji,
+      icon: iconKey,
       volumeMl: Math.round(ozToMl(oz)),
       category: category,
       active: true,
@@ -1850,10 +1842,8 @@
       code: WEDDING_CODE
     };
     if(detail) doc.detail = detail;
-    var iconKey = $("newItemIcon").value;
-    if(iconKey && LOGOS[iconKey]) doc.icon = iconKey;
     db.collection("weddingDrinkMenu").add(doc).then(function(){
-      $("newItemName").value = ""; $("newItemEmoji").value = ""; $("newItemOz").value = ""; $("newItemDetail").value = ""; $("newItemIcon").value = "";
+      $("newItemName").value = ""; $("newItemOz").value = ""; $("newItemDetail").value = ""; $("newItemIcon").value = "";
       showToast("Added " + name + " to the menu.");
     }).catch(function(e){ console.error(e); showToast("Couldn't add drink — check your connection."); });
   });
@@ -1868,7 +1858,6 @@
       var ref = db.collection("weddingDrinkMenu").doc();
       var data = {
         name: item.name,
-        emoji: item.emoji,
         volumeMl: Math.round(ozToMl(item.oz)),
         category: item.category,
         active: true,
@@ -2022,7 +2011,7 @@
     return Promise.all([
       fontsReady,
       Promise.all(recentPhotos.map(function(p){ return loadImageSrc(p.thumb); })),
-      Promise.all(topTied.map(function(c){ return c.icon ? loadImageSrc(logoDataUrl(c.icon, "#5f4c3e")) : Promise.resolve(null); }))
+      Promise.all(topTied.map(function(c){ return loadImageSrc(logoDataUrl(c.icon || "cocktail", "#5f4c3e")); }))
     ]).then(function(res){
       var imgs = res[1].filter(Boolean);
       var logoImgs = res[2];
@@ -2086,9 +2075,6 @@
         if(logoImgs.length === tied.length && logoImgs.every(Boolean)){
           var lsz = 104, lgap = 30, lw = tied.length * lsz + (tied.length - 1) * lgap, lx = (W - lw) / 2;
           logoImgs.forEach(function(im, i){ ctx.drawImage(im, lx + i * (lsz + lgap), y + 8, lsz, lsz); });
-        }else{
-          ctx.font = '84px serif'; ctx.fillStyle = DARK;
-          ctx.fillText(tied.map(function(x){ return x.emoji; }).join(" "), W / 2, y + 100);
         }
         ctx.fillStyle = TAUPE; ctx.font = '54px "Amarante", Georgia, serif';
         drawSpaced(ctx, tied.map(function(x){ return x.name; }).join(" & ").toUpperCase(), W / 2, y + 175, 4);
@@ -2191,9 +2177,13 @@
       document.fonts.load('600 30px "Crimson Text"'),
       document.fonts.load('italic 30px "Crimson Text"')
     ]).catch(function(){});
-    var favSrc = (s.fav && s.fav.item && s.fav.item.icon) ? logoDataUrl(s.fav.item.icon, "#5f4c3e") : "";
-    return Promise.all([fontsReady, favSrc ? loadImageSrc(favSrc) : Promise.resolve(null)]).then(function(res){
-      var favLogo = res[1];
+    var favSrc = (s.fav && s.fav.item) ? logoDataUrl(s.fav.item.icon || "cocktail", "#5f4c3e") : "";
+    return Promise.all([
+      fontsReady,
+      favSrc ? loadImageSrc(favSrc) : Promise.resolve(null),
+      loadImageSrc(logoDataUrl("flute", "#5f4c3e"))
+    ]).then(function(res){
+      var favLogo = res[1], heroLogo = res[2];
       var W = 1080, H = 1920;
       var c = document.createElement("canvas"); c.width = W; c.height = H;
       var ctx = c.getContext("2d");
@@ -2215,7 +2205,13 @@
         ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
       }
       ctx.globalAlpha = 1; ctx.fillStyle = GOLD; ctx.font = '54px serif'; ctx.textAlign = "center";
-      [[140, 470], [940, 430], [110, 1010], [975, 1080], [150, 1600], [930, 1640]].forEach(function(p){ ctx.fillText("✦", p[0], p[1]); });
+      [[140, 450], [940, 410], [110, 990], [975, 1060], [150, 1580], [930, 1620]].forEach(function(p){
+        var cx = p[0], cy = p[1], r = 26;
+        ctx.beginPath(); ctx.moveTo(cx, cy - r);
+        ctx.quadraticCurveTo(cx, cy, cx + r, cy); ctx.quadraticCurveTo(cx, cy, cx, cy + r);
+        ctx.quadraticCurveTo(cx, cy, cx - r, cy); ctx.quadraticCurveTo(cx, cy, cx, cy - r);
+        ctx.fill();
+      });
 
       ctx.strokeStyle = PEACH; ctx.lineWidth = 4; roundRectPath(ctx, 44, 44, W - 88, H - 88, 44); ctx.stroke();
 
@@ -2224,7 +2220,7 @@
       ctx.fillStyle = TAUPE; ctx.font = '70px ' + DISPLAY; drawSpaced(ctx, "ANDREW & LYDIA", W / 2, 350, 8);
       ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "NOVEMBER 6–7, 2026", W / 2, 406, 5);
 
-      ctx.font = '150px serif'; ctx.fillStyle = DARK; ctx.fillText("🥂", W / 2, 590);
+      if(heroLogo) ctx.drawImage(heroLogo, W / 2 - 80, 440, 160, 160);
 
       var nm = (s.name.toUpperCase() + "'S WEEKEND");
       ctx.fillStyle = TAUPE; fitText(ctx, nm, '{px}px ' + DISPLAY, 66, 880);
@@ -2260,11 +2256,7 @@
 
       // Signature sip
       if(s.fav){
-        if(favLogo){
-          ctx.drawImage(favLogo, W / 2 - 56, 1510, 112, 112);
-        }else{
-          ctx.font = '90px serif'; ctx.fillStyle = DARK; ctx.fillText(s.fav.item.emoji || "🥂", W / 2, 1600);
-        }
+        if(favLogo) ctx.drawImage(favLogo, W / 2 - 56, 1510, 112, 112);
         ctx.fillStyle = TAUPE; ctx.font = 'italic 44px ' + BODY;
         ctx.fillText("Signature sip: " + s.fav.item.name + (s.fav.count > 1 ? " (" + s.fav.count + "x)" : ""), W / 2, 1668);
       }
