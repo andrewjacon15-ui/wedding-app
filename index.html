@@ -338,7 +338,7 @@
 
     <div id="tabs">
 
-      <section class="tab-panel active" id="tab-drinks">
+      <section class="tab-panel" id="tab-drinks">
         <div class="card">
           <div class="section-title">The Bar Menu</div>
           <div class="photo-hint" style="margin-top:-6px;">Tap a drink each time you grab one. Please drink responsibly and look out for each other.</div>
@@ -378,7 +378,7 @@
         </div>
       </section>
 
-      <section class="tab-panel" id="tab-agenda">
+      <section class="tab-panel active" id="tab-agenda">
         <div class="agenda-link"><a href="https://www.theknot.com/us/andrew-jacon-and-lydia-koenig-nov-2026" target="_blank" rel="noopener">Visit our wedding website &rarr;</a></div>
         <div class="card">
           <div class="section-title">Order of the Weekend</div>
@@ -530,11 +530,11 @@
   </main>
 
   <nav class="bottom-nav">
-    <button data-tab="drinks" class="active">Drinks</button>
-    <button data-tab="me">Stats</button>
-    <button data-tab="leaderboard">Board</button>
+    <button data-tab="agenda" class="active">Agenda</button>
     <button data-tab="photos">Photos</button>
-    <button data-tab="agenda">Agenda</button>
+    <button data-tab="drinks">Drinks</button>
+    <button data-tab="leaderboard">Board</button>
+    <button data-tab="me">Stats</button>
   </nav>
 
   <div class="footer-note">Thank you for celebrating with us.<br><button class="admin-link" id="adminLink">Admin</button></div>
@@ -972,26 +972,23 @@
 
   // ---- Tabs ----
   var navButtons = document.querySelectorAll("nav.bottom-nav button");
-  var TAB_NAMES = ["drinks", "me", "leaderboard", "photos", "agenda", "admin"];
-  // The current tab is kept in the URL hash (and localStorage as a backup) so a
-  // refresh puts you back where you were instead of on Drinks.
+  var TAB_NAMES = ["agenda", "photos", "drinks", "leaderboard", "me", "admin"];
+  // The current tab is kept in the URL hash so a refresh puts you back where you
+  // were. A plain visit (e.g. scanning the QR code) always opens on the Agenda.
   function showTab(name, restoring){
-    if(TAB_NAMES.indexOf(name) === -1) name = "drinks";
+    if(TAB_NAMES.indexOf(name) === -1) name = "agenda";
     navButtons.forEach(function(b){ b.classList.toggle("active", b.dataset.tab === name); });
     document.querySelectorAll(".tab-panel").forEach(function(p){ p.classList.remove("active"); });
     $("tab-" + name).classList.add("active");
     if(!restoring) window.scrollTo(0, 0);
-    try{ localStorage.setItem("wdt_tab", name); }catch(e){}
     try{ history.replaceState(null, "", "#" + name); }catch(e){}
     if(name === "photos") loadModerationModel().catch(function(){});
     if(name === "photos" || name === "admin") watchPhotos();
   }
   function restoreTab(){
     var fromHash = (location.hash || "").replace("#", "");
-    var saved = null;
-    try{ saved = localStorage.getItem("wdt_tab"); }catch(e){}
-    var name = TAB_NAMES.indexOf(fromHash) !== -1 ? fromHash : (TAB_NAMES.indexOf(saved) !== -1 ? saved : "drinks");
-    if(name !== "drinks") showTab(name, true);
+    var name = TAB_NAMES.indexOf(fromHash) !== -1 ? fromHash : "agenda";
+    if(name !== "agenda") showTab(name, true);
   }
   navButtons.forEach(function(btn){
     btn.addEventListener("click", function(){ showTab(btn.dataset.tab); });
