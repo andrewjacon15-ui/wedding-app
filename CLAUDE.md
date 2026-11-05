@@ -14,7 +14,7 @@
   real brand logos.
 - Menu items store an `icon` key only (no `emoji` field). Anything without a
   logo falls back to the generic `cocktail` logo, never to an emoji.
-- New drinks must be given a logo in Admin > Add a Drink. If none of the 23
+- New drinks must be given a logo in Admin > Add a Drink. If none of the 25
   logos fits, draw a new one in the same style and add it to `LOGOS`.
 - Canvas share cards draw logos as images (`logoDataUrl`), not as emoji text.
 - Decorative sparkles on cards are drawn shapes, not text glyphs.
