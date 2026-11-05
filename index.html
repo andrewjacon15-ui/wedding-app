@@ -184,6 +184,7 @@
   .lb-rank.top1,.lb-rank.top2,.lb-rank.top3{color:var(--taupe-dark);font-size:1.2rem;}
   .lb-name{flex:1;font-weight:600;font-size:1.08rem;color:var(--taupe-dark);}
   .lb-name .you-tag{font-size:.7rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-style:italic;font-weight:400;margin-left:8px;}
+  .lb-name .lb-split{display:block;font-size:.82rem;font-weight:400;font-style:italic;color:var(--muted);margin-top:1px;}
   .lb-vol{text-align:right;}
   .lb-vol .n{font-family:var(--display);color:var(--taupe);font-size:1rem;letter-spacing:.5px;}
   .lb-vol .c{font-size:.85rem;color:var(--muted);font-style:italic;}
@@ -287,6 +288,8 @@
   .unit-toggle{display:flex;gap:6px;justify-content:center;margin:2px 0 16px;}
   .unit-toggle button{padding:6px 16px;border-radius:999px;font-size:.8rem;font-family:var(--display);text-transform:uppercase;letter-spacing:1.5px;background:transparent;color:var(--taupe);border:1px solid var(--peach);}
   .unit-toggle button.active{background:var(--taupe);color:var(--cream);border-color:var(--taupe);}
+  .day-toggle{margin:2px 0 6px;}
+  .day-ctx{text-align:center;font-style:italic;color:var(--muted);font-size:.98rem;margin:0 0 14px;}
   /* Photos */
   .photo-upload-label{
     display:block;text-align:center;background:var(--taupe);color:var(--cream);padding:14px 18px;border-radius:3px;
@@ -356,6 +359,8 @@
 
       <section class="tab-panel" id="tab-me">
         <div class="card">
+          <div class="unit-toggle day-toggle" id="dayToggle"></div>
+          <div class="day-ctx" id="dayCtx"></div>
           <div class="unit-toggle">
             <button id="unitOz" class="active">fl oz</button>
             <button id="unitMl">mL</button>
@@ -367,7 +372,7 @@
           </div>
           <div class="stat-row">
             <div class="stat-box"><div class="n" id="myDrinkCount">0</div><div class="l">Drinks logged</div></div>
-            <div class="stat-box"><div class="n" id="myRank">—</div><div class="l">Leaderboard rank</div></div>
+            <div class="stat-box"><div class="n" id="myRank">—</div><div class="l" id="myRankLabel">Leaderboard rank</div></div>
           </div>
           <button class="btn-primary" id="shareStatsBtn">Share my weekend</button>
           <div class="export-hint" style="margin:10px 0 0;">Makes a story-sized image you can post to Instagram.</div>
@@ -1161,6 +1166,64 @@
   });
 
   // ==========================================================
+  // Party days
+  // ==========================================================
+  // Every drink is tallied overall (totalMl / drinkCount, which the leaderboard
+  // uses) and also per party day on the guest doc: days[<YYYY-MM-DD>] = {ml, n, by}.
+  // Stats show the day-by-day numbers, so Saturday starts fresh (a soft reset)
+  // while the leaderboard keeps the weekend total. A "day" runs 6 AM to 6 AM
+  // Eastern, so a drink at 12:30 AM still belongs to the night it started on.
+  var EVENT_DAYS = [
+    {key:"2026-11-06", short:"Fri", full:"Friday", name:"Welcome Party", dateLine:"FRIDAY  •  NOVEMBER 6, 2026", cardName:"WELCOME PARTY", rankTail:"AT THE PARTY", shareLabel:"Share my welcome party"},
+    {key:"2026-11-07", short:"Sat", full:"Saturday", name:"Wedding", dateLine:"SATURDAY  •  NOVEMBER 7, 2026", cardName:"WEDDING", rankTail:"AT THE WEDDING", shareLabel:"Share my wedding night"}
+  ];
+  var DAY_ROLLOVER_MS = 6 * 3600 * 1000;
+  var dayFmt = null;
+  function dayKeyAt(ms){
+    var t = new Date(ms - DAY_ROLLOVER_MS);
+    try{
+      if(!dayFmt) dayFmt = new Intl.DateTimeFormat("en-CA", {timeZone:"America/New_York", year:"numeric", month:"2-digit", day:"2-digit"});
+      return dayFmt.format(t);
+    }catch(e){
+      return t.getFullYear() + "-" + pad2(t.getMonth() + 1) + "-" + pad2(t.getDate());
+    }
+  }
+  function currentDayKey(){ return dayKeyAt(Date.now()); }
+  function eventDay(key){
+    for(var i = 0; i < EVENT_DAYS.length; i++){ if(EVENT_DAYS[i].key === key) return EVENT_DAYS[i]; }
+    return null;
+  }
+  function dayLabel(key){ var d = eventDay(key); return d ? d.name : key; }
+  // This guest's tally for one day: {ml, n, by}. Never negative.
+  function guestDay(g, key){
+    var d = g && g.days && g.days[key];
+    return { ml: Math.max(0, Number(d && d.ml) || 0), n: Math.max(0, Number(d && d.n) || 0), by: (d && d.by) || {} };
+  }
+  // Which day a logged drink belongs to (older entries fall back to their timestamp).
+  function logDayKey(l){
+    if(l.dayKey) return l.dayKey;
+    return l.loggedAt ? dayKeyAt(l.loggedAt.toMillis()) : currentDayKey();
+  }
+  // "Fri 3 · Sat 5" for guests who drank on more than one event day ("" otherwise).
+  function daySplitText(g, always){
+    var parts = [];
+    EVENT_DAYS.forEach(function(d){ var n = guestDay(g, d.key).n; if(n > 0) parts.push(d.short + " " + n); });
+    return (always ? parts.length > 0 : parts.length > 1) ? parts.join(" · ") : "";
+  }
+  // Guests with drinks on one day, biggest pour first.
+  function rankedForDay(key){
+    return allGuests.filter(function(g){ return g.archived !== true && guestDay(g, key).n > 0; })
+      .sort(function(a, b){ return guestDay(b, key).ml - guestDay(a, key).ml; });
+  }
+  // Increment payload for the days map (negative to undo).
+  function dayIncrement(key, itemId, volumeMl, sign){
+    var by = {}; by[itemId] = firebase.firestore.FieldValue.increment(sign);
+    var one = { ml: firebase.firestore.FieldValue.increment(sign * volumeMl), n: firebase.firestore.FieldValue.increment(sign), by: by };
+    var days = {}; days[key] = one;
+    return days;
+  }
+
+  // ==========================================================
   // Logging a drink
   // ==========================================================
   function ensureGuestDoc(){
@@ -1193,6 +1256,7 @@
     "{n} drinks in! Time to hydrate before the next round.",
     "Psst... {n} drinks down. Sip some water and look out for each other."
   ];
+  // count is tonight's drinks (the water check resets with each party day).
   function maybeWaterNudge(count, item){
     if(count < 3 || count % 3 !== 0) return;
     if((item.category || "") === "Non-Alcoholic") return;
@@ -1228,6 +1292,7 @@
     var note = noteBlocked ? "" : censorProfanity(rawNote);
     var batch = db.batch();
     var logRef = db.collection("weddingDrinkLog").doc();
+    var dayKey = currentDayKey();
     var logData = {
       guestId: guestId,
       guestName: guestName,
@@ -1235,6 +1300,7 @@
       itemName: item.name,
       category: item.category || "Drink",
       volumeMl: item.volumeMl,
+      dayKey: dayKey,
       voided: false,
       loggedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -1252,11 +1318,12 @@
       totalMl: firebase.firestore.FieldValue.increment(item.volumeMl),
       drinkCount: firebase.firestore.FieldValue.increment(1),
       byItem: byItemInc,
+      days: dayIncrement(dayKey, item.id, item.volumeMl, 1),
       archived: false,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true});
 
-    var countAfter = (myGuestDoc && myGuestDoc.archived !== true ? (myGuestDoc.drinkCount || 0) : 0) + 1;
+    var countAfter = (myGuestDoc && myGuestDoc.archived !== true ? guestDay(myGuestDoc, dayKey).n : 0) + 1;
     markWriteStart();
     batch.commit().then(function(){
       markWriteOk();
@@ -1264,7 +1331,7 @@
       updateCooldownUI();
       if(note || noteBlocked){ $("drinkNote").value = ""; updateNoteCount(); }
       showToast("Logged " + item.name + " (" + fmtNum(mlToOz(item.volumeMl)) + " oz)" + (noteBlocked ? ". Your note wasn't posted." : ""), function(){
-        undoLog(logRef.id, item.volumeMl, item.id);
+        undoLog(logRef.id, item.volumeMl, item.id, dayKey);
       });
       maybeWaterNudge(countAfter, item);
     }).catch(function(e){
@@ -1274,7 +1341,7 @@
     });
   }
 
-  function undoLog(logId, volumeMl, itemId){
+  function undoLog(logId, volumeMl, itemId, dayKey){
     if(!firebaseReady) return;
     var batch = db.batch();
     batch.update(db.collection("weddingDrinkLog").doc(logId), { voided: true });
@@ -1288,6 +1355,7 @@
     if(itemId){
       undoData.byItem = {};
       undoData.byItem[itemId] = firebase.firestore.FieldValue.increment(-1);
+      if(dayKey) undoData.days = dayIncrement(dayKey, itemId, volumeMl, -1);
     }
     batch.set(db.collection("weddingDrinkGuests").doc(guestId), undoData, {merge:true});
     var undone = menuItems.find(function(m){ return m.id === itemId; });
@@ -1368,11 +1436,43 @@
   }
   cooldownTicker = setInterval(updateCooldownUI, 1000);
 
+  // ---- Stats view: one party day at a time, or the whole weekend ----
+  // "auto" follows the clock: the Welcome Party on Friday, the Wedding on
+  // Saturday (a soft reset), then the weekend total once the party days are over.
+  var statsView = "auto";
+  function effectiveStatsView(){
+    if(statsView !== "auto") return statsView;
+    var k = currentDayKey();
+    if(eventDay(k)) return k;
+    return k < EVENT_DAYS[0].key ? EVENT_DAYS[0].key : "all";
+  }
+  function renderDayToggle(){
+    var view = effectiveStatsView();
+    var html = EVENT_DAYS.map(function(d){
+      return '<button data-view="'+d.key+'"'+(view === d.key ? ' class="active"' : '')+'>'+d.full+'</button>';
+    }).join("") + '<button data-view="all"'+(view === "all" ? ' class="active"' : '')+'>Weekend</button>';
+    var box = $("dayToggle");
+    if(box.innerHTML !== html) box.innerHTML = html;
+    var d = eventDay(view);
+    $("dayCtx").textContent = d ? (d.name + " · " + d.full) : "The whole weekend, both days together";
+    $("shareStatsBtn").textContent = d ? d.shareLabel : "Share my weekend";
+  }
+  $("dayToggle").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button") : null;
+    if(!b) return;
+    statsView = b.dataset.view;
+    renderMyStats();
+    renderMyLog();
+  });
+
   function renderMyStats(){
+    renderDayToggle();
+    var view = effectiveStatsView();
     // A removed/purged guest (archived) counts as having nothing logged.
     var me = (myGuestDoc && myGuestDoc.archived !== true) ? myGuestDoc : null;
-    var totalMl = me ? (me.totalMl||0) : 0;
-    var count = me ? (me.drinkCount||0) : 0;
+    var day = (view !== "all") ? guestDay(me, view) : null;
+    var totalMl = day ? day.ml : (me ? (me.totalMl||0) : 0);
+    var count = day ? day.n : (me ? (me.drinkCount||0) : 0);
     if(unitMode==="oz"){
       $("myTotalBig").textContent = fmtNum(mlToOz(totalMl));
       $("myTotalUnit").textContent = "fl oz consumed";
@@ -1381,31 +1481,37 @@
       $("myTotalUnit").textContent = "mL consumed";
     }
     $("myDrinkCount").textContent = count;
-    // Rank among the guests actually on the leaderboard (not archived, with drinks).
-    var rankIdx = activeRankedGuests().findIndex(function(g){ return g.id === guestId; });
+    // Rank among the guests actually on the board that day (not archived, with drinks).
+    var ranked = day ? rankedForDay(view) : activeRankedGuests();
+    var rankIdx = ranked.findIndex(function(g){ return g.id === guestId; });
     $("myRank").textContent = (rankIdx >= 0) ? ("#" + (rankIdx+1)) : "—";
+    $("myRankLabel").textContent = day ? (eventDay(view).full + " rank") : "Leaderboard rank";
   }
 
   function renderMyLog(){
     var box = $("myLog");
-    if(!myLogEntries.length){
-      box.innerHTML = '<div class="empty-state">No drinks logged yet — head to the Drinks tab!</div>';
+    var view = effectiveStatsView();
+    var entries = view === "all" ? myLogEntries : myLogEntries.filter(function(l){ return logDayKey(l) === view; });
+    if(!entries.length){
+      var d = eventDay(view);
+      box.innerHTML = '<div class="empty-state">'+(d ? 'No drinks logged for the '+escapeHtml(d.name)+' yet' : 'No drinks logged yet')+' — head to the Drinks tab!</div>';
       return;
     }
-    box.innerHTML = myLogEntries.slice(0,20).map(function(l){
+    box.innerHTML = entries.slice(0,20).map(function(l){
       var when = l.loggedAt ? timeAgo(l.loggedAt.toDate()) : "just now";
+      var dk = logDayKey(l), dd = eventDay(dk);
       return '<div class="log-row '+(l.voided?'voided':'')+'">'+
         '<div class="li"><span class="emoji">'+entryIconHtml(l)+'</span>'+
         '<span class="meta"><span class="n">'+escapeHtml(l.itemName)+'</span>'+
-        '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+when+'</span>'+
+        '<span class="t">'+fmtNum(mlToOz(l.volumeMl))+' oz · '+(view === "all" && dd ? dd.short + ' · ' : '')+when+'</span>'+
         (l.message && !isBlockedNote(l.message) ? '<span class="note">&ldquo;'+escapeHtml(censorProfanity(l.message))+'&rdquo;</span>' : '')+
         '</span></div>'+
-        (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'" data-item="'+escapeHtml(l.itemId||'')+'">Undo</button>')+
+        (l.voided ? '' : '<button class="btn-ghost" data-undo="'+l.id+'" data-vol="'+l.volumeMl+'" data-item="'+escapeHtml(l.itemId||'')+'" data-day="'+escapeHtml(dk)+'">Undo</button>')+
         '</div>';
     }).join("");
     box.querySelectorAll("[data-undo]").forEach(function(btn){
       btn.addEventListener("click", function(){
-        undoLog(btn.dataset.undo, parseFloat(btn.dataset.vol), btn.dataset.item || null);
+        undoLog(btn.dataset.undo, parseFloat(btn.dataset.vol), btn.dataset.item || null, btn.dataset.day || null);
       });
     });
   }
@@ -1465,7 +1571,8 @@
       var rankDisplay = medals[i] || ("#" + (i+1));
       return '<div class="lb-row '+(isMe?'me':'')+'">'+
         '<div class="lb-rank '+(i<3?'top'+(i+1):'')+'">'+rankDisplay+'</div>'+
-        '<div class="lb-name">'+escapeHtml(g.name)+(isMe?'<span class="you-tag">YOU</span>':'')+'</div>'+
+        '<div class="lb-name">'+escapeHtml(g.name)+(isMe?'<span class="you-tag">YOU</span>':'')+
+        (daySplitText(g) ? '<span class="lb-split">'+daySplitText(g)+'</span>' : '')+'</div>'+
         '<div class="lb-vol"><div class="n">'+fmtNum(mlToOz(g.totalMl||0))+' oz</div>'+
         '<div class="c">'+plural(g.drinkCount||0, "drink")+'</div></div>'+
         '</div>';
@@ -1964,11 +2071,17 @@
     var items = menuItems.filter(function(m){
       return m.active !== false || guests.some(function(g){ return g.byItem && Number(g.byItem[m.id]) > 0; });
     });
-    var header = ["Rank", "Guest", "Drinks", "Total fl oz", "Total mL"].concat(items.map(function(m){ return m.name + " (count)"; }));
+    var dayHeads = [];
+    EVENT_DAYS.forEach(function(d){ dayHeads.push(d.full + " drinks", d.full + " fl oz"); });
+    var header = ["Rank", "Guest", "Drinks", "Total fl oz", "Total mL"].concat(dayHeads)
+      .concat(items.map(function(m){ return m.name + " (count)"; }));
     var rows = [header];
     guests.forEach(function(g, i){
       var by = g.byItem || {};
+      var dayCells = [];
+      EVENT_DAYS.forEach(function(d){ var x = guestDay(g, d.key); dayCells.push(x.n, fmtNum(mlToOz(x.ml), 1)); });
       rows.push([i + 1, g.name, g.drinkCount || 0, fmtNum(mlToOz(g.totalMl || 0), 1), Math.round(g.totalMl || 0)]
+        .concat(dayCells)
         .concat(items.map(function(m){ return Math.max(0, Number(by[m.id]) || 0); })));
     });
     downloadCsv("final-stats", rows);
@@ -1991,9 +2104,9 @@
   $("exportLogBtn").addEventListener("click", function(){
     if(!firebaseReady) return;
     exportBusy("Preparing drink log", fetchAllLogs().then(function(logs){
-      var rows = [["Time", "Guest", "Guest ID", "Drink", "Category", "fl oz", "mL", "Message", "Undone", "Message hidden"]];
+      var rows = [["Time", "Party day", "Guest", "Guest ID", "Drink", "Category", "fl oz", "mL", "Message", "Undone", "Message hidden"]];
       logs.forEach(function(l){
-        rows.push([fmtStamp(l.loggedAt), l.guestName, l.guestId, l.itemName, l.category || "",
+        rows.push([fmtStamp(l.loggedAt), dayLabel(logDayKey(l)), l.guestName, l.guestId, l.itemName, l.category || "",
           fmtNum(mlToOz(l.volumeMl || 0), 1), Math.round(l.volumeMl || 0), l.message ? safeNote(l.message) : "",
           l.voided === true ? "yes" : "no", l.messageHidden === true ? "yes" : "no"]);
       });
@@ -2159,12 +2272,15 @@
     return px;
   }
 
+  // The card follows the Stats view: one party day, or the whole weekend.
   function myNightStats(){
     var me = myGuestDoc;
-    if(!me || me.archived === true || (me.drinkCount || 0) <= 0) return null;
-    var ranked = activeRankedGuests();
+    var view = effectiveStatsView();
+    var day = (view !== "all") ? guestDay(me, view) : null;
+    if(!me || me.archived === true || (day ? day.n : (me.drinkCount || 0)) <= 0) return null;
+    var ranked = day ? rankedForDay(view) : activeRankedGuests();
     var rankIdx = ranked.findIndex(function(g){ return g.id === guestId; });
-    var by = me.byItem || {};
+    var by = day ? day.by : (me.byItem || {});
     var entries = Object.keys(by).map(function(id){
       return { id: id, count: Number(by[id]) || 0, item: menuItems.find(function(m){ return m.id === id; }) };
     }).filter(function(e){ return e.count > 0 && e.item; }).sort(function(a, b){ return b.count - a.count; });
@@ -2172,7 +2288,9 @@
     entries.forEach(function(e){ var c = e.item.category || "Drink"; byCat[c] = (byCat[c] || 0) + e.count; });
     var topCat = Object.keys(byCat).sort(function(a, b){ return byCat[b] - byCat[a]; })[0] || "";
     var nonAlc = byCat["Non-Alcoholic"] || 0;
-    var drinks = me.drinkCount || 0;
+    var drinks = day ? day.n : (me.drinkCount || 0);
+    var split = [];
+    if(!day) EVENT_DAYS.forEach(function(d){ var x = guestDay(me, d.key); if(x.n > 0) split.push({ day: d, n: x.n }); });
     var title = "Life of the Party";
     if(rankIdx === 0 && ranked.length > 1) title = "Bar Champion";
     else if(nonAlc >= 2 && nonAlc / drinks >= 0.3) title = "Hydration Hero";
@@ -2185,8 +2303,10 @@
     else if(topCat === "Non-Alcoholic") title = (entries[0] && /water/i.test(entries[0].item.name)) ? "Hydration Hero" : "Mocktail Maven";
     return {
       name: me.name || guestName || "Guest",
-      totalMl: me.totalMl || 0,
+      totalMl: day ? day.ml : (me.totalMl || 0),
       drinks: drinks,
+      day: day ? eventDay(view) : null,
+      split: split,
       rank: rankIdx >= 0 ? rankIdx + 1 : null,
       guests: ranked.length,
       fav: entries[0] || null,
@@ -2241,11 +2361,11 @@
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
       // Header (kept below Instagram's top bar)
       ctx.fillStyle = TAUPE; ctx.font = '70px ' + DISPLAY; drawSpaced(ctx, "ANDREW & LYDIA", W / 2, 350, 8);
-      ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "NOVEMBER 6–7, 2026", W / 2, 406, 5);
+      ctx.font = '600 30px ' + BODY; drawSpaced(ctx, s.day ? s.day.dateLine : "NOVEMBER 6–7, 2026", W / 2, 406, 5);
 
       if(heroLogo) ctx.drawImage(heroLogo, W / 2 - 80, 440, 160, 160);
 
-      var nm = (s.name.toUpperCase() + "'S WEEKEND");
+      var nm = (s.name.toUpperCase() + "'S " + (s.day ? s.day.cardName : "WEEKEND"));
       ctx.fillStyle = TAUPE; fitText(ctx, nm, '{px}px ' + DISPLAY, 66, 880);
       ctx.fillText(nm, W / 2, 700);
       ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - 70, 736, 140, 3);
@@ -2259,7 +2379,7 @@
 
       // Pills
       var pills = [plural(s.drinks, "drink").toUpperCase()];
-      if(s.rank) pills.push("#" + s.rank + " ON THE BOARD");
+      if(s.rank) pills.push("#" + s.rank + " " + (s.day ? s.day.rankTail : "ON THE BOARD"));
       ctx.font = '38px ' + DISPLAY;
       var padX = 36, gap = 24;
       var widths = pills.map(function(t){ return ctx.measureText(t).width + padX * 2; });
@@ -2272,8 +2392,15 @@
         px0 += widths[i] + gap;
       });
 
+      // Weekend card: how the drinks split across the two party days
+      if(s.split.length > 1){
+        var splitTxt = s.split.map(function(x){ return x.day.name + " " + x.n; }).join("   •   ");
+        ctx.fillStyle = MUTED; fitText(ctx, splitTxt, 'italic {px}px ' + BODY, 34, 860);
+        ctx.fillText(splitTxt, W / 2, 1347);
+      }
+
       // Title badge
-      ctx.fillStyle = MUTED; ctx.font = '600 30px ' + BODY; drawSpaced(ctx, "WEEKEND TITLE", W / 2, 1400, 6);
+      ctx.fillStyle = MUTED; ctx.font = '600 30px ' + BODY; drawSpaced(ctx, s.day ? "TITLE OF THE NIGHT" : "WEEKEND TITLE", W / 2, 1400, 6);
       ctx.fillStyle = DARK; fitText(ctx, s.title.toUpperCase(), '{px}px ' + DISPLAY, 68, 880);
       ctx.fillText(s.title.toUpperCase(), W / 2, 1478);
 
@@ -2341,6 +2468,7 @@
         totalMl: 0,
         drinkCount: 0,
         byItem: firebase.firestore.FieldValue.delete(),
+        days: firebase.firestore.FieldValue.delete(),
         archived: true,
         code: WEDDING_CODE,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2397,6 +2525,7 @@
             b.set(guestsCol.doc(g.id), {
               totalMl: 0, drinkCount: 0,
               byItem: firebase.firestore.FieldValue.delete(),
+              days: firebase.firestore.FieldValue.delete(),
               archived: true, code: WEDDING_CODE,
               updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, {merge:true});
@@ -2430,7 +2559,8 @@
     box.innerHTML = visible.map(function(g){
       return '<div class="guest-row">'+
         '<div class="gr-info"><span class="gr-name">'+escapeHtml(g.name)+'</span>'+
-        '<span class="gr-stats">'+fmtNum(mlToOz(g.totalMl||0))+' oz · '+plural(g.drinkCount||0, "drink")+'</span></div>'+
+        '<span class="gr-stats">'+fmtNum(mlToOz(g.totalMl||0))+' oz · '+plural(g.drinkCount||0, "drink")+
+        (daySplitText(g, true) ? ' · '+daySplitText(g, true) : '')+'</span></div>'+
         '<button class="btn-ghost" data-remove-guest="'+g.id+'" data-name="'+escapeHtml(g.name)+'">Remove</button>'+
         '</div>';
     }).join("");

@@ -16,8 +16,14 @@ guests open on their phone.
   live countdown. Non-alcoholic drinks (water, soda, juice, N/A beer) only wait
   1 minute, and the two timers do not block each other. Undoing a mis-tap clears
   it immediately.
-- **My stats** — running total in fl oz or mL, drink count, and live rank.
-- **Share my weekend** — every guest can turn their stats into a cute
+- **My stats, day by day** — running total in fl oz or mL, drink count, and live rank,
+  with a Friday (Welcome Party) / Saturday (Wedding) / Weekend toggle. Each party day
+  is tallied on its own, so Saturday starts fresh (a soft reset) while the Leaderboard
+  keeps the weekend total and shows a small "Fri 3 · Sat 5" split. A party day runs
+  6 AM to 6 AM Eastern, so a drink after midnight still counts for the night it
+  started on. The water check, rank, recent drinks and share card all follow the
+  selected day.
+- **Share my weekend / welcome party / wedding night** — every guest can turn their stats into a cute
   story-sized image (1080x1920) with their total, rank, a fun title like "Hop
   Head" or "Hydration Hero", and their signature drink. On phones it opens the
   share sheet (straight to Instagram Stories); elsewhere it saves the image.
@@ -28,7 +34,7 @@ guests open on their phone.
 - **Agenda tab** — a link to the wedding website, the Friday welcome party, the Saturday order of the day, shuttle times, and a note that
   rideshare doesn't operate in the county. Edit the times directly in `index.html` (search for "Order of the Weekend").
 - **Export & share (Admin)** — download the final stats, all notes, or the
-  complete drink log as CSV, or a shareable results card image (top 5,
+  complete drink log as CSV (with Friday and Saturday columns), or a shareable results card image (top 5,
   Drink of the Night, totals, and your latest photos).
 - **Drink notes** — an optional 140-character note can ride along with any
   drink. Notes show in My Recent Drinks and in a "Notes from the Bar" feed on
