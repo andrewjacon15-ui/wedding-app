@@ -36,6 +36,10 @@ guests open on their phone.
 - **Export & share (Admin)** — download the final stats, all notes, or the
   complete drink log as CSV (with Friday and Saturday columns), or a shareable results card image (top 5,
   Drink of the Night, totals, and your latest photos).
+- **Fresh start (scheduled)** — a GitHub Actions job (`.github/workflows/fresh-start.yml`) deletes every guest,
+  drink and photo from the database at 5:00 PM Eastern on Nov 6, 2026, with no one needing to press anything.
+  The menu and settings stay. It is safe to re-run (a marker record stops a second purge), and it can be
+  tried from the Actions tab in `dry` (count only) or `test` (only guests named ZZ...) mode.
 - **Drink notes** — an optional 140-character note can ride along with any
   drink. Notes show in My Recent Drinks and in a "Notes from the Bar" feed on
   the Leaderboard tab; admins can hide any note. Swear words are masked but
