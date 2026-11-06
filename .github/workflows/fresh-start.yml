@@ -1,0 +1,39 @@
+name: Fresh start at 5 PM
+
+# Friday, Nov 6, 2026 at 5:00 PM Eastern (22:00 UTC): delete every guest, drink and photo
+# from the database so the welcome party starts clean. The menu and settings stay.
+#
+# GitHub can start scheduled jobs a little late, so the job is scheduled a bit early and
+# the script waits for 22:00 UTC sharp. The three triggers are backups for each other:
+# a marker record means whichever runs second does nothing. After 2026 the date check in
+# the script makes these triggers harmless.
+on:
+  schedule:
+    - cron: "30 21 6 11 *"
+    - cron: "50 21 6 11 *"
+    - cron: "10 22 6 11 *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry = count only, test = delete only guests named ZZ..., live = the real purge (only works around 5 PM Nov 6)"
+        default: "dry"
+        type: choice
+        options: [dry, test, live]
+
+concurrency:
+  group: fresh-start
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Purge
+        run: node .github/scripts/purge.js
+        env:
+          PURGE_MODE: ${{ inputs.mode || 'live' }}
