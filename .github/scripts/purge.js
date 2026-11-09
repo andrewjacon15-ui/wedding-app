@@ -54,9 +54,10 @@ async function list(col, field){
   });
 }
 
-async function commit(writes){
-  for(var i = 0; i < writes.length; i += 200){
-    await api(BASE + ":commit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ writes: writes.slice(i, i + 200) }) });
+async function commit(writes, size){
+  size = size || 200;
+  for(var i = 0; i < writes.length; i += size){
+    await api(BASE + ":commit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ writes: writes.slice(i, i + size) }) });
   }
 }
 function markWrite(name, fields){
@@ -81,7 +82,8 @@ async function purgeOnce(s){
     s.guests.map(function(d){ return markWrite(d.name, { archived: true }); }),
     s.photos.map(function(d){ return markWrite(d.name, { hidden: true }); })
   ));
-  await commit(s.photos.map(function(d){ return { delete: DOC + "/weddingDrinkPhotoFull/" + d.id }; }));
+  // Each of these deletes makes the rules look up the thumbnail, and one request may only do 20 lookups.
+  await commit(s.photos.map(function(d){ return { delete: DOC + "/weddingDrinkPhotoFull/" + d.id }; }), 10);
   await commit([].concat(
     s.logs.map(function(d){ return { delete: d.name }; }),
     s.photos.map(function(d){ return { delete: d.name }; }),
